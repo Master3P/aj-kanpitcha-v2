@@ -344,3 +344,328 @@ function formatDateTime(v){
     return '-';
   }
 }
+// =====================================================
+// TEACHER PANEL - Phase 3
+// =====================================================
+
+let TEACHER = null;
+
+function showTeacherLogin(){
+  showPage('pageTeacherLogin');
+}
+
+async function teacherLogin(){
+  const username = val('teacherUser');
+  const password = val('teacherPass');
+
+  if(!username) return toast('กรุณากรอกชื่อผู้ใช้');
+  if(!password) return toast('กรุณากรอกรหัสผ่าน');
+
+  showLoading('กำลังเข้าสู่ระบบอาจารย์', 'ระบบกำลังตรวจสอบสิทธิ์...');
+
+  try {
+    const { data, error } = await sb.rpc('teacher_login_v2', {
+      p_username: username,
+      p_password: password
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'เข้าสู่ระบบไม่สำเร็จ');
+      return;
+    }
+
+    TEACHER = data.data;
+    localStorage.setItem('teacher_token', TEACHER.token);
+    localStorage.setItem('teacher_name', TEACHER.teacher_name || 'Admin');
+
+    document.getElementById('teacherInfo').innerText =
+      'เข้าสู่ระบบแล้ว: ' + (TEACHER.teacher_name || TEACHER.username);
+
+    await refreshTeacherCourses();
+
+    showPage('pageTeacherPanel');
+
+  } catch(err) {
+    hideLoading();
+    alert('เข้าสู่ระบบอาจารย์ไม่สำเร็จ: ' + err.message);
+  }
+}
+
+function teacherLogout(){
+  TEACHER = null;
+  localStorage.removeItem('teacher_token');
+  localStorage.removeItem('teacher_name');
+  showPage('pageLogin');
+  toast('ออกจากระบบแล้ว');
+}
+
+function getTeacherToken(){
+  return TEACHER?.token || localStorage.getItem('teacher_token') || '';
+}
+
+function teacherTab(id){
+  document.querySelectorAll('.teacher-box').forEach(x => x.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+async function refreshTeacherCourses(){
+  await loadCourses();
+
+  const html = COURSES.length
+    ? COURSES.map(c => `<option value="${esc(c.id)}">${esc(c.display_name || c.course_name)}</option>`).join('')
+    : '<option value="">ยังไม่มีรายวิชา</option>';
+
+  ['teacherStudentCourse','teacherAttendanceCourse'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = html;
+  });
+
+  renderCourses();
+}
+
+async function teacherCreateCourse(){
+  const token = getTeacherToken();
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+
+  showLoading('กำลังเพิ่มรายวิชา', 'ระบบกำลังบันทึกข้อมูลรายวิชา...');
+
+  try {
+    const { data, error } = await sb.rpc('teacher_create_course_v2', {
+      p_token: token,
+      p_course_name: val('courseName'),
+      p_display_name: val('courseDisplayName'),
+      p_google_sheet_id: val('courseSheetId'),
+      p_sheet_name: val('courseSheetName')
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'เพิ่มรายวิชาไม่สำเร็จ');
+      return;
+    }
+
+    toast(data.message || 'เพิ่มรายวิชาสำเร็จ');
+
+    document.getElementById('courseName').value = '';
+    document.getElementById('courseDisplayName').value = '';
+    document.getElementById('courseSheetId').value = '';
+    document.getElementById('courseSheetName').value = '';
+
+    await refreshTeacherCourses();
+
+  } catch(err) {
+    hideLoading();
+    alert('เพิ่มรายวิชาไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function teacherAddStudent(){
+  const token = getTeacherToken();
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+
+  const courseId = val('teacherStudentCourse');
+
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+
+  showLoading('กำลังบันทึกนักศึกษา', 'ระบบกำลังเพิ่มข้อมูลนักศึกษา...');
+
+  try {
+    const { data, error } = await sb.rpc('teacher_add_student_v2', {
+      p_token: token,
+      p_course_id: courseId,
+      p_student_id: val('newStudentId'),
+      p_full_name: val('newStudentName'),
+      p_row_number: Number(val('newStudentRow') || 0)
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'บันทึกนักศึกษาไม่สำเร็จ');
+      return;
+    }
+
+    toast(data.message || 'บันทึกนักศึกษาสำเร็จ');
+
+    document.getElementById('newStudentId').value = '';
+    document.getElementById('newStudentName').value = '';
+    document.getElementById('newStudentRow').value = '';
+
+    await teacherLoadStudents();
+
+  } catch(err) {
+    hideLoading();
+    alert('บันทึกนักศึกษาไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function teacherLoadStudents(){
+  const token = getTeacherToken();
+  const courseId = val('teacherStudentCourse');
+  const box = document.getElementById('teacherStudentList');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+
+  box.innerHTML = 'กำลังโหลดรายชื่อ...';
+
+  try {
+    const { data, error } = await sb.rpc('teacher_get_students_v2', {
+      p_token: token,
+      p_course_id: courseId
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const rows = data.data || [];
+
+    box.innerHTML = rows.length
+      ? rows.map(s => `
+          <div class="student-row">
+            <div>
+              <b>${esc(s.student_id)}</b><br>
+              ${esc(s.full_name)}
+            </div>
+            <small>แถว ${esc(s.row_number || '-')}</small>
+          </div>
+        `).join('')
+      : '<div class="note">ยังไม่มีรายชื่อนักศึกษา</div>';
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">โหลดรายชื่อไม่สำเร็จ: ${esc(err.message)}</div>`;
+  }
+}
+
+async function teacherOpenAttendance(){
+  const token = getTeacherToken();
+  const courseId = val('teacherAttendanceCourse');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+
+  showLoading('กำลังเปิดเช็คชื่อ', 'ระบบกำลังสร้างรอบเช็คชื่อใหม่...');
+
+  try {
+    const { data, error } = await sb.rpc('teacher_open_attendance_v2', {
+      p_token: token,
+      p_course_id: courseId,
+      p_session_label: val('attLabel'),
+      p_pin: val('attPin'),
+      p_duration_minutes: Number(val('attDuration') || 10)
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'เปิดเช็คชื่อไม่สำเร็จ');
+      return;
+    }
+
+    toast(data.message || 'เปิดเช็คชื่อสำเร็จ');
+    await teacherLoadAttendanceStatus();
+
+  } catch(err) {
+    hideLoading();
+    alert('เปิดเช็คชื่อไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function teacherCloseAttendance(){
+  const token = getTeacherToken();
+  const courseId = val('teacherAttendanceCourse');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+
+  showLoading('กำลังปิดเช็คชื่อ', 'ระบบกำลังปิดรอบเช็คชื่อ...');
+
+  try {
+    const { data, error } = await sb.rpc('teacher_close_attendance_v2', {
+      p_token: token,
+      p_course_id: courseId
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'ปิดเช็คชื่อไม่สำเร็จ');
+      return;
+    }
+
+    toast(data.message || 'ปิดเช็คชื่อสำเร็จ');
+    await teacherLoadAttendanceStatus();
+
+  } catch(err) {
+    hideLoading();
+    alert('ปิดเช็คชื่อไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function teacherLoadAttendanceStatus(){
+  const token = getTeacherToken();
+  const courseId = val('teacherAttendanceCourse');
+  const box = document.getElementById('teacherAttendanceStatus');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+
+  box.innerHTML = 'กำลังโหลดสถานะ...';
+
+  try {
+    const { data, error } = await sb.rpc('teacher_get_attendance_status_v2', {
+      p_token: token,
+      p_course_id: courseId
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message)}</div>`;
+      return;
+    }
+
+    if(!data.data){
+      box.innerHTML = '<div class="note">ยังไม่มีรอบเช็คชื่อ</div>';
+      return;
+    }
+
+    const s = data.data;
+
+    box.innerHTML = `
+      <div class="status-box">
+        <h3>ครั้งที่ ${esc(s.session_no)} : ${esc(s.session_label || '-')}</h3>
+        <p>สถานะ:
+          <span class="${s.status === 'เปิด' ? 'status-open' : 'status-close'}">
+            ${esc(s.status)}
+          </span>
+        </p>
+        <p>เปิดเมื่อ: ${formatDateTime(s.opened_at)}</p>
+        <p>หมดเวลา: ${formatDateTime(s.close_at)}</p>
+        <p>จำนวนผู้เช็คชื่อ: <b>${esc(s.checked_count)}</b> คน</p>
+      </div>
+    `;
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">โหลดสถานะไม่สำเร็จ: ${esc(err.message)}</div>`;
+  }
+}
