@@ -109,10 +109,10 @@
           <span>กรอกรหัสเข้าเรียนจากอาจารย์</span>
         </div>
 
-        <div class="menu-card disabled">
+        <div class="menu-card" onclick="openSpecialScorePage()">
           <div class="menu-icon">✨</div>
           <b>คะแนนพิเศษ</b>
-          <span>จะเปิดใน Phase ถัดไป</span>
+          <span>ส่งคะแนนพิเศษจากการตอบคำถาม</span>
         </div>
 
         <div class="menu-card" onclick="openSubmissionPage()">
@@ -127,10 +127,10 @@
           <span>ดูว่าส่งงานแล้วหรือยัง</span>
         </div>
 
-        <div class="menu-card disabled">
+        <div class="menu-card" onclick="openLeavePage()">
           <div class="menu-icon">📄</div>
           <b>ลาเรียน</b>
-          <span>จะเปิดใน Phase ถัดไป</span>
+          <span>ส่งใบลาและดูประวัติการลา</span>
         </div>
 
         <div class="menu-card" onclick="openGuidePage()">
@@ -143,6 +143,78 @@
       <div class="credit">Created by AJ.Kanpitcha</div>
     </div>
   </section>
+<!-- SPECIAL SCORE -->
+<section id="pageSpecialScore" class="page">
+  <div class="container narrow">
+    <div class="head">
+      <div>
+        <h1>คะแนนพิเศษ</h1>
+        <p>บันทึกคะแนนพิเศษจากกิจกรรมหรือการตอบคำถาม</p>
+      </div>
+      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+    </div>
+
+    <div class="card">
+      <label>คะแนนพิเศษที่ได้รับ</label>
+      <select id="specialScoreValue">
+        <option value="1">+1 คะแนน</option>
+        <option value="2">+2 คะแนน</option>
+        <option value="3">+3 คะแนน</option>
+      </select>
+
+      <label>รายละเอียด</label>
+      <textarea id="specialScoreDetail" rows="4" placeholder="เช่น ตอบคำถามเรื่องการนำนโยบายไปปฏิบัติ"></textarea>
+
+      <button class="btn-main full" onclick="studentSubmitSpecialScore()">ส่งคะแนนพิเศษ</button>
+
+      <hr>
+
+      <h3>ประวัติคะแนนพิเศษ</h3>
+      <button class="btn-soft" onclick="loadStudentSpecialScores()">รีเฟรชประวัติ</button>
+      <div id="specialScoreHistoryBox" class="mt-box"></div>
+    </div>
+  </div>
+</section>
+
+<!-- LEAVE -->
+<section id="pageLeave" class="page">
+  <div class="container narrow">
+    <div class="head">
+      <div>
+        <h1>ลาเรียน</h1>
+        <p>ส่งใบลาเรียนพร้อมหลักฐาน ถ้ามี</p>
+      </div>
+      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+    </div>
+
+    <div class="card">
+      <label>วันที่ลา</label>
+      <input id="leaveDate" type="date">
+
+      <label>ประเภทการลา</label>
+      <select id="leaveType">
+        <option value="ลากิจ">ลากิจ</option>
+        <option value="ลาป่วย">ลาป่วย</option>
+        <option value="อื่น ๆ">อื่น ๆ</option>
+      </select>
+
+      <label>เหตุผล</label>
+      <textarea id="leaveReason" rows="4" placeholder="ระบุเหตุผลการลา"></textarea>
+
+      <label>หลักฐานการลา ถ้ามี</label>
+      <input id="leaveFile" type="file">
+
+      <button class="btn-main full" onclick="studentSubmitLeave()">ส่งใบลา</button>
+
+      <hr>
+
+      <h3>ประวัติการลา</h3>
+      <button class="btn-soft" onclick="loadStudentLeaveHistory()">รีเฟรชประวัติ</button>
+      <div id="leaveHistoryBox" class="mt-box"></div>
+    </div>
+  </div>
+</section>
+  
 <!-- SUBMISSION -->
 <section id="pageSubmission" class="page">
   <div class="container narrow">
@@ -263,6 +335,7 @@
       <button class="btn-main" onclick="teacherTab('teacherStudentBox')">นักศึกษา</button>
       <button class="btn-main" onclick="teacherTab('teacherAttendanceBox')">เช็คชื่อ</button>
       <button class="btn-main" onclick="teacherTab('teacherAssignmentBox')">ชิ้นงาน</button>
+      <button class="btn-main" onclick="teacherTab('teacherLeaveBox')">ใบลา</button>
     </div>
 
     <div id="teacherCourseBox" class="teacher-box active">
@@ -365,6 +438,19 @@
     <button class="btn-soft full" onclick="teacherLoadSubmissionReport()">โหลดรายงานส่งงาน</button>
 
     <div id="teacherSubmissionReportBox" class="mt-box"></div>
+  </div>
+</div>
+
+<div id="teacherLeaveBox" class="teacher-box">
+  <div class="card">
+    <h2>รายการลาเรียน</h2>
+
+    <label>เลือกรายวิชา</label>
+    <select id="teacherLeaveCourse"></select>
+
+    <button class="btn-main full" onclick="teacherLoadLeaveRequests()">โหลดรายการลา</button>
+
+    <div id="teacherLeaveBoxList" class="mt-box"></div>
   </div>
 </div>
     
