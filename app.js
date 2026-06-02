@@ -419,7 +419,7 @@ async function refreshTeacherCourses(){
     ? COURSES.map(c => `<option value="${esc(c.id)}">${esc(c.display_name || c.course_name)}</option>`).join('')
     : '<option value="">ยังไม่มีรายวิชา</option>';
 
-  ['teacherStudentCourse','teacherAttendanceCourse','teacherAssignmentCourse'].forEach(id => {
+  ['teacherStudentCourse','teacherAttendanceCourse','teacherAssignmentCourse','teacherLeaveCourse'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.innerHTML = html;
 });
@@ -997,4 +997,369 @@ function makeSafeFileName(name){
   return String(name || 'file')
     .replace(/[^\u0E00-\u0E7Fa-zA-Z0-9._-]/g, '_')
     .slice(0, 120);
+}
+
+// =====================================================
+// PHASE 5 - Special Scores + Leave Requests
+// =====================================================
+
+const ALLOWED_LEAVE_FILE_TYPES = [
+  'application/pdf',
+  'image/jpeg',
+  'image/png'
+];
+
+async function openSpecialScorePage(){
+  if(!STUDENT) return toast('กรุณาเข้าสู่ระบบก่อน');
+  showPage('pageSpecialScore');
+  await loadStudentSpecialScores();
+}
+
+async function studentSubmitSpecialScore(){
+  if(!STUDENT) return toast('กรุณาเข้าสู่ระบบก่อน');
+
+  const score = Number(val('specialScoreValue') || 0);
+  const detail = val('specialScoreDetail');
+
+  if(score < 1 || score > 3){
+    return toast('กรุณาเลือกคะแนน +1 ถึง +3');
+  }
+
+  showLoading('กำลังบันทึกคะแนนพิเศษ', 'ระบบกำลังบันทึกคะแนนพิเศษ...');
+
+  try {
+    const { data, error } = await sb.rpc('student_add_special_score_v2', {
+      p_course_id: STUDENT.course_id,
+      p_student_id: STUDENT.student_id,
+      p_full_name: STUDENT.full_name,
+      p_score: score,
+      p_detail: detail
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'บันทึกคะแนนพิเศษไม่สำเร็จ');
+      return;
+    }
+
+    document.getElementById('specialScoreDetail').value = '';
+    toast('บันทึกคะแนนพิเศษสำเร็จ');
+    await loadStudentSpecialScores();
+
+  } catch(err) {
+    hideLoading();
+    alert('บันทึกคะแนนพิเศษไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function loadStudentSpecialScores(){
+  if(!STUDENT) return;
+
+  const box = document.getElementById('specialScoreHistoryBox');
+  box.innerHTML = 'กำลังโหลดประวัติ...';
+
+  try {
+    const { data, error } = await sb.rpc('student_get_special_scores_v2', {
+      p_course_id: STUDENT.course_id,
+      p_student_id: STUDENT.student_id
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const d = data.data || {};
+    const rows = d.rows || [];
+
+    box.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-num">${esc(d.total || 0)}</div>
+        <b>คะแนนพิเศษรวม</b>
+      </div>
+      ${
+        rows.length
+          ? `
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>วันที่</th>
+                    <th>คะแนน</th>
+                    <th>รายละเอียด</th>
+                    <th>รวมหลังบวก</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${rows.map(r => `
+                    <tr>
+                      <td>${formatDateTime(r.created_at)}</td>
+                      <td>+${esc(r.score)}</td>
+                      <td>${esc(r.detail || '-')}</td>
+                      <td>${esc(r.new_total || '-')}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          `
+          : '<div class="note">ยังไม่มีประวัติคะแนนพิเศษ</div>'
+      }
+    `;
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">โหลดประวัติไม่สำเร็จ: ${esc(err.message)}</div>`;
+  }
+}
+
+async function openLeavePage(){
+  if(!STUDENT) return toast('กรุณาเข้าสู่ระบบก่อน');
+  showPage('pageLeave');
+  await loadStudentLeaveHistory();
+}
+
+async function studentSubmitLeave(){
+  if(!STUDENT) return toast('กรุณาเข้าสู่ระบบก่อน');
+
+  const leaveDate = val('leaveDate');
+  const leaveType = val('leaveType');
+  const reason = val('leaveReason');
+  const fileInput = document.getElementById('leaveFile');
+  const file = fileInput.files[0];
+
+  if(!leaveDate) return toast('กรุณาเลือกวันที่ลา');
+  if(!leaveType) return toast('กรุณาเลือกประเภทการลา');
+
+  let fileUrl = '';
+  let fileName = '';
+
+  showLoading('กำลังส่งใบลา', 'ระบบกำลังบันทึกใบลาเรียน...');
+
+  try {
+    if(file){
+      if(file.size > MAX_FILE_SIZE){
+        hideLoading();
+        return toast('ไฟล์ใหญ่เกิน 10 MB');
+      }
+
+      if(!ALLOWED_LEAVE_FILE_TYPES.includes(file.type)){
+        hideLoading();
+        return toast('รองรับเฉพาะ PDF, JPG, PNG');
+      }
+
+      const safeName = makeSafeFileName(file.name);
+      const path = `${STUDENT.course_id}/${STUDENT.student_id}_${Date.now()}_${safeName}`;
+
+      const upload = await sb.storage
+        .from('leave-files')
+        .upload(path, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if(upload.error) throw upload.error;
+
+      fileUrl = sb.storage
+        .from('leave-files')
+        .getPublicUrl(path)
+        .data
+        .publicUrl;
+
+      fileName = file.name;
+    }
+
+    const { data, error } = await sb.rpc('student_submit_leave_v2', {
+      p_course_id: STUDENT.course_id,
+      p_student_id: STUDENT.student_id,
+      p_full_name: STUDENT.full_name,
+      p_leave_date: leaveDate,
+      p_leave_type: leaveType,
+      p_reason: reason,
+      p_file_url: fileUrl,
+      p_file_name: fileName
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'ส่งใบลาไม่สำเร็จ');
+      return;
+    }
+
+    document.getElementById('leaveReason').value = '';
+    document.getElementById('leaveFile').value = '';
+
+    toast('ส่งใบลาเรียบร้อยแล้ว');
+    await loadStudentLeaveHistory();
+
+  } catch(err) {
+    hideLoading();
+    alert('ส่งใบลาไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function loadStudentLeaveHistory(){
+  if(!STUDENT) return;
+
+  const box = document.getElementById('leaveHistoryBox');
+  box.innerHTML = 'กำลังโหลดประวัติการลา...';
+
+  try {
+    const { data, error } = await sb.rpc('student_get_leave_history_v2', {
+      p_course_id: STUDENT.course_id,
+      p_student_id: STUDENT.student_id
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const rows = data.data || [];
+
+    box.innerHTML = rows.length
+      ? `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>วันที่ส่ง</th>
+                <th>วันที่ลา</th>
+                <th>ประเภท</th>
+                <th>เหตุผล</th>
+                <th>หลักฐาน</th>
+                <th>สถานะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r => `
+                <tr>
+                  <td>${formatDateTime(r.created_at)}</td>
+                  <td>${esc(r.leave_date || '-')}</td>
+                  <td>${esc(r.leave_type || '-')}</td>
+                  <td>${esc(r.reason || '-')}</td>
+                  <td>${r.file_url ? `<a class="file-link" target="_blank" href="${esc(r.file_url)}">เปิดหลักฐาน</a>` : '-'}</td>
+                  <td>${esc(r.status || '-')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `
+      : '<div class="note">ยังไม่มีประวัติการลา</div>';
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">โหลดประวัติไม่สำเร็จ: ${esc(err.message)}</div>`;
+  }
+}
+
+async function teacherLoadLeaveRequests(){
+  const token = getTeacherToken();
+  const courseId = val('teacherLeaveCourse');
+  const box = document.getElementById('teacherLeaveBoxList');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+
+  box.innerHTML = 'กำลังโหลดรายการลา...';
+
+  try {
+    const { data, error } = await sb.rpc('teacher_get_leave_requests_v2', {
+      p_token: token,
+      p_course_id: courseId
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const rows = data.data || [];
+
+    box.innerHTML = rows.length
+      ? `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>วันที่ส่ง</th>
+                <th>รหัส</th>
+                <th>ชื่อ</th>
+                <th>วันที่ลา</th>
+                <th>ประเภท</th>
+                <th>เหตุผล</th>
+                <th>หลักฐาน</th>
+                <th>สถานะ</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r => `
+                <tr>
+                  <td>${formatDateTime(r.created_at)}</td>
+                  <td>${esc(r.student_id)}</td>
+                  <td>${esc(r.full_name)}</td>
+                  <td>${esc(r.leave_date || '-')}</td>
+                  <td>${esc(r.leave_type || '-')}</td>
+                  <td>${esc(r.reason || '-')}</td>
+                  <td>${r.file_url ? `<a class="file-link" target="_blank" href="${esc(r.file_url)}">เปิดหลักฐาน</a>` : '-'}</td>
+                  <td>${esc(r.status || '-')}</td>
+                  <td>
+                    <button class="btn-soft small" onclick="teacherUpdateLeaveStatus('${esc(r.id)}','รับทราบ')">รับทราบ</button>
+                    <button class="btn-soft small" onclick="teacherUpdateLeaveStatus('${esc(r.id)}','ไม่อนุมัติ')">ไม่อนุมัติ</button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `
+      : '<div class="note">ยังไม่มีรายการลาเรียน</div>';
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">โหลดรายการลาไม่สำเร็จ: ${esc(err.message)}</div>`;
+  }
+}
+
+async function teacherUpdateLeaveStatus(leaveId, status){
+  const token = getTeacherToken();
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+
+  showLoading('กำลังอัปเดตสถานะ', 'ระบบกำลังบันทึกสถานะใบลา...');
+
+  try {
+    const { data, error } = await sb.rpc('teacher_update_leave_status_v2', {
+      p_token: token,
+      p_leave_id: leaveId,
+      p_status: status
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'อัปเดตสถานะไม่สำเร็จ');
+      return;
+    }
+
+    toast('อัปเดตสถานะเรียบร้อยแล้ว');
+    await teacherLoadLeaveRequests();
+
+  } catch(err) {
+    hideLoading();
+    alert('อัปเดตสถานะไม่สำเร็จ: ' + err.message);
+  }
 }
