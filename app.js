@@ -854,7 +854,6 @@ async function loadStudentSubmissionStatus(){
           <table>
             <thead>
               <tr>
-                <th>คอลัมน์</th>
                 <th>ชิ้นงาน</th>
                 <th>สถานะ</th>
                 <th>เวลาส่งล่าสุด</th>
@@ -864,7 +863,6 @@ async function loadStudentSubmissionStatus(){
             <tbody>
               ${rows.map(r => `
                 <tr>
-                  <td>${esc(r.item_column)}</td>
                   <td>${esc(r.title)}</td>
                   <td>${r.status === 'ส่งแล้ว' ? '<span class="check">✓ ส่งแล้ว</span>' : '<span class="miss">ยังไม่ส่ง</span>'}</td>
                   <td>${formatDateTime(r.submitted_at)}</td>
