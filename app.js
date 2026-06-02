@@ -721,7 +721,7 @@ async function loadStudentAssignments(){
     select.innerHTML = STUDENT_ASSIGNMENTS.length
       ? STUDENT_ASSIGNMENTS.map(a => `
           <option value="${esc(a.item_column)}">
-            ${esc(a.item_column)} - ${esc(a.title)}
+            ${esc(a.title)}
           </option>
         `).join('')
       : '<option value="">ยังไม่มีชิ้นงานที่เปิดให้ส่ง</option>';
