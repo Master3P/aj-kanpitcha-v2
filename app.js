@@ -1363,3 +1363,58 @@ async function teacherUpdateLeaveStatus(leaveId, status){
     alert('อัปเดตสถานะไม่สำเร็จ: ' + err.message);
   }
 }
+
+// =====================================================
+// PHASE 6 - Sync Courses/Students from Google Sheet
+// =====================================================
+
+async function syncCoursesFromGoogleSheet(){
+  const token = getTeacherToken();
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+
+  if(!BRIDGE_URL || BRIDGE_URL.includes('ใส่')){
+    return toast('ยังไม่ได้ตั้งค่า BRIDGE_URL ใน config.js');
+  }
+
+  showLoading('กำลังซิงค์จาก Google Sheet', 'ระบบกำลังดึงรายวิชาและรายชื่อนักศึกษา...');
+
+  try {
+    const res = await fetch(BRIDGE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify({
+        action: 'syncCoursesFromSheet'
+      })
+    });
+
+    const data = await res.json();
+
+    hideLoading();
+
+    if(!data.ok){
+      alert(data.message || 'ซิงค์ไม่สำเร็จ');
+      return;
+    }
+
+    const d = data.data || {};
+
+    toast('ซิงค์สำเร็จ');
+
+    alert(
+      'ซิงค์สำเร็จ\n' +
+      'ไฟล์: ' + (d.spreadsheetName || '-') + '\n' +
+      'นำเข้ารายวิชา: ' + (d.importedCourses || 0) + '\n' +
+      'ข้ามชีต: ' + (d.skippedSheets || 0) + '\n' +
+      'นำเข้านักศึกษา: ' + (d.importedStudents || 0)
+    );
+
+    await refreshTeacherCourses();
+
+  } catch(err) {
+    hideLoading();
+    alert('ซิงค์ไม่สำเร็จ: ' + err.message);
+  }
+}
