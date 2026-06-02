@@ -1459,7 +1459,7 @@ async function teacherLoadScoreAssignments(){
     select.innerHTML = SCORE_ASSIGNMENTS.length
       ? SCORE_ASSIGNMENTS.map(a => `
           <option value="${esc(a.item_column)}">
-            ${esc(a.item_column)} - ${esc(a.title)} (${esc(a.max_score || '-')} คะแนน)
+            ${esc(a.title)}
           </option>
         `).join('')
       : '<option value="">ยังไม่มีชิ้นงาน</option>';
