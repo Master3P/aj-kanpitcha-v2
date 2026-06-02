@@ -669,3 +669,332 @@ async function teacherLoadAttendanceStatus(){
     box.innerHTML = `<div class="note">โหลดสถานะไม่สำเร็จ: ${esc(err.message)}</div>`;
   }
 }
+// =====================================================
+// PHASE 4 - Assignments + Submissions
+// =====================================================
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+const ALLOWED_UPLOAD_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'image/jpeg',
+  'image/png'
+];
+
+let STUDENT_ASSIGNMENTS = [];
+
+async function openSubmissionPage(){
+  if(!STUDENT) return toast('กรุณาเข้าสู่ระบบก่อน');
+
+  showPage('pageSubmission');
+  await loadStudentAssignments();
+}
+
+async function loadStudentAssignments(){
+  const select = document.getElementById('submissionAssignment');
+  const detail = document.getElementById('assignmentDetailBox');
+
+  select.innerHTML = '<option value="">กำลังโหลดชิ้นงาน...</option>';
+  detail.innerHTML = '';
+
+  try {
+    const { data, error } = await sb.rpc('student_get_assignments_v2', {
+      p_course_id: STUDENT.course_id
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      select.innerHTML = '<option value="">โหลดชิ้นงานไม่สำเร็จ</option>';
+      toast(data.message || 'โหลดชิ้นงานไม่สำเร็จ');
+      return;
+    }
+
+    STUDENT_ASSIGNMENTS = data.data || [];
+
+    select.innerHTML = STUDENT_ASSIGNMENTS.length
+      ? STUDENT_ASSIGNMENTS.map(a => `
+          <option value="${esc(a.item_column)}">
+            ${esc(a.item_column)} - ${esc(a.title)}
+          </option>
+        `).join('')
+      : '<option value="">ยังไม่มีชิ้นงานที่เปิดให้ส่ง</option>';
+
+    renderAssignmentDetail();
+
+  } catch(err) {
+    select.innerHTML = '<option value="">โหลดชิ้นงานไม่สำเร็จ</option>';
+    alert('โหลดชิ้นงานไม่สำเร็จ: ' + err.message);
+  }
+}
+
+function renderAssignmentDetail(){
+  const col = val('submissionAssignment');
+  const box = document.getElementById('assignmentDetailBox');
+
+  const a = STUDENT_ASSIGNMENTS.find(x => x.item_column === col);
+
+  if(!a){
+    box.innerHTML = 'ยังไม่ได้เลือกชิ้นงาน';
+    return;
+  }
+
+  box.innerHTML = `
+    <b>${esc(a.title)}</b><br>
+    คะแนนเต็ม: ${esc(a.max_score || '-')}<br>
+    กำหนดส่ง: ${a.due_date ? esc(a.due_date) : '-'}<br><br>
+    <div style="white-space:pre-wrap">${esc(a.description || '-')}</div>
+  `;
+}
+
+async function studentSubmitAssignment(){
+  if(!STUDENT) return toast('กรุณาเข้าสู่ระบบก่อน');
+
+  const itemColumn = val('submissionAssignment');
+  const fileInput = document.getElementById('submissionFile');
+  const file = fileInput.files[0];
+
+  if(!itemColumn) return toast('กรุณาเลือกชิ้นงาน');
+  if(!file) return toast('กรุณาแนบไฟล์งาน');
+
+  if(file.size > MAX_FILE_SIZE){
+    toast('ไฟล์ใหญ่เกิน 10 MB');
+    return;
+  }
+
+  if(!ALLOWED_UPLOAD_TYPES.includes(file.type)){
+    toast('ไม่รองรับชนิดไฟล์นี้');
+    return;
+  }
+
+  showLoading('กำลังส่งงาน', 'ระบบกำลังอัปโหลดไฟล์และบันทึกการส่งงาน...');
+
+  try {
+    const safeName = makeSafeFileName(file.name);
+    const path = `${STUDENT.course_id}/${itemColumn}/${STUDENT.student_id}_${Date.now()}_${safeName}`;
+
+    const upload = await sb.storage
+      .from('submissions')
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if(upload.error) throw upload.error;
+
+    const publicUrl = sb.storage
+      .from('submissions')
+      .getPublicUrl(path)
+      .data
+      .publicUrl;
+
+    const { data, error } = await sb.rpc('student_submit_assignment_v2', {
+      p_course_id: STUDENT.course_id,
+      p_item_column: itemColumn,
+      p_student_id: STUDENT.student_id,
+      p_full_name: STUDENT.full_name,
+      p_file_url: publicUrl,
+      p_file_name: file.name
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'ส่งงานไม่สำเร็จ');
+      return;
+    }
+
+    fileInput.value = '';
+    toast('ส่งงานสำเร็จ');
+
+  } catch(err) {
+    hideLoading();
+    alert('ส่งงานไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function openSubmissionStatusPage(){
+  if(!STUDENT) return toast('กรุณาเข้าสู่ระบบก่อน');
+
+  showPage('pageSubmissionStatus');
+  await loadStudentSubmissionStatus();
+}
+
+async function loadStudentSubmissionStatus(){
+  const box = document.getElementById('submissionStatusBox');
+
+  box.innerHTML = 'กำลังโหลดสถานะ...';
+
+  try {
+    const { data, error } = await sb.rpc('student_get_submission_status_v2', {
+      p_course_id: STUDENT.course_id,
+      p_student_id: STUDENT.student_id
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const rows = data.data || [];
+
+    box.innerHTML = rows.length
+      ? `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>คอลัมน์</th>
+                <th>ชิ้นงาน</th>
+                <th>สถานะ</th>
+                <th>เวลาส่งล่าสุด</th>
+                <th>ไฟล์</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r => `
+                <tr>
+                  <td>${esc(r.item_column)}</td>
+                  <td>${esc(r.title)}</td>
+                  <td>${r.status === 'ส่งแล้ว' ? '<span class="check">✓ ส่งแล้ว</span>' : '<span class="miss">ยังไม่ส่ง</span>'}</td>
+                  <td>${formatDateTime(r.submitted_at)}</td>
+                  <td>${r.file_url ? `<a class="file-link" target="_blank" href="${esc(r.file_url)}">เปิดไฟล์</a>` : '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `
+      : '<div class="note">ยังไม่มีชิ้นงานที่เปิดให้ส่ง</div>';
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">โหลดสถานะไม่สำเร็จ: ${esc(err.message)}</div>`;
+  }
+}
+
+async function teacherCreateAssignment(){
+  const token = getTeacherToken();
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+
+  const courseId = val('teacherAssignmentCourse');
+
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+
+  showLoading('กำลังบันทึกชิ้นงาน', 'ระบบกำลังบันทึกรายละเอียดชิ้นงาน...');
+
+  try {
+    const dueDate = val('assignmentDueDate') || null;
+
+    const { data, error } = await sb.rpc('teacher_create_assignment_v2', {
+      p_token: token,
+      p_course_id: courseId,
+      p_item_column: val('assignmentColumn'),
+      p_title: val('assignmentTitle'),
+      p_description: val('assignmentDescription'),
+      p_max_score: Number(val('assignmentMaxScore') || 0),
+      p_due_date: dueDate
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'บันทึกชิ้นงานไม่สำเร็จ');
+      return;
+    }
+
+    toast('บันทึกชิ้นงานสำเร็จ');
+
+    document.getElementById('assignmentColumn').value = '';
+    document.getElementById('assignmentTitle').value = '';
+    document.getElementById('assignmentDescription').value = '';
+    document.getElementById('assignmentMaxScore').value = '';
+    document.getElementById('assignmentDueDate').value = '';
+
+  } catch(err) {
+    hideLoading();
+    alert('บันทึกชิ้นงานไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function teacherLoadSubmissionReport(){
+  const token = getTeacherToken();
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+
+  const courseId = val('teacherAssignmentCourse');
+  const itemColumn = val('submissionReportColumn');
+  const box = document.getElementById('teacherSubmissionReportBox');
+
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+  if(!itemColumn) return toast('กรุณากรอกคอลัมน์ชิ้นงาน');
+
+  box.innerHTML = 'กำลังโหลดรายงาน...';
+
+  try {
+    const { data, error } = await sb.rpc('teacher_get_submission_report_v2', {
+      p_token: token,
+      p_course_id: courseId,
+      p_item_column: itemColumn
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const rows = data.data || [];
+
+    box.innerHTML = rows.length
+      ? `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>รหัส</th>
+                <th>ชื่อ</th>
+                <th>สถานะ</th>
+                <th>เวลาส่งล่าสุด</th>
+                <th>ไฟล์</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r => `
+                <tr>
+                  <td>${esc(r.student_id)}</td>
+                  <td>${esc(r.full_name)}</td>
+                  <td>${r.status === 'ส่งแล้ว' ? '<span class="check">✓ ส่งแล้ว</span>' : '<span class="miss">ยังไม่ส่ง</span>'}</td>
+                  <td>${formatDateTime(r.submitted_at)}</td>
+                  <td>${r.file_url ? `<a class="file-link" target="_blank" href="${esc(r.file_url)}">เปิดไฟล์</a>` : '-'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `
+      : '<div class="note">ยังไม่มีข้อมูลนักศึกษา</div>';
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">โหลดรายงานไม่สำเร็จ: ${esc(err.message)}</div>`;
+  }
+}
+
+function makeSafeFileName(name){
+  return String(name || 'file')
+    .replace(/[^\u0E00-\u0E7Fa-zA-Z0-9._-]/g, '_')
+    .slice(0, 120);
+}
