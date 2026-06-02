@@ -115,16 +115,16 @@
           <span>จะเปิดใน Phase ถัดไป</span>
         </div>
 
-        <div class="menu-card disabled">
+        <div class="menu-card" onclick="openSubmissionPage()">
           <div class="menu-icon">📁</div>
           <b>ส่งงาน</b>
-          <span>จะเปิดใน Phase ถัดไป</span>
+          <span>แนบไฟล์และส่งงาน</span>
         </div>
 
-        <div class="menu-card disabled">
+        <div class="menu-card" onclick="openSubmissionStatusPage()">
           <div class="menu-icon">📌</div>
           <b>ตรวจสอบการส่งงาน</b>
-          <span>จะเปิดใน Phase ถัดไป</span>
+          <span>ดูว่าส่งงานแล้วหรือยัง</span>
         </div>
 
         <div class="menu-card disabled">
@@ -143,7 +143,49 @@
       <div class="credit">Created by AJ.Kanpitcha</div>
     </div>
   </section>
+<!-- SUBMISSION -->
+<section id="pageSubmission" class="page">
+  <div class="container narrow">
+    <div class="head">
+      <div>
+        <h1>ส่งงาน</h1>
+        <p>เลือกชิ้นงาน แนบไฟล์ และกดส่งงาน</p>
+      </div>
+      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+    </div>
 
+    <div class="card">
+      <label>งานที่ส่ง</label>
+      <select id="submissionAssignment" onchange="renderAssignmentDetail()"></select>
+
+      <div id="assignmentDetailBox" class="note"></div>
+
+      <label>แนบไฟล์งาน</label>
+      <input id="submissionFile" type="file">
+
+      <button class="btn-main full" onclick="studentSubmitAssignment()">อัปโหลดและส่งงาน</button>
+    </div>
+  </div>
+</section>
+
+<!-- SUBMISSION STATUS -->
+<section id="pageSubmissionStatus" class="page">
+  <div class="container">
+    <div class="head">
+      <div>
+        <h1>ตรวจสอบการส่งงาน</h1>
+        <p>ดูสถานะการส่งงานของตนเอง</p>
+      </div>
+      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+    </div>
+
+    <div class="card">
+      <button class="btn-soft" onclick="loadStudentSubmissionStatus()">รีเฟรชสถานะ</button>
+      <div id="submissionStatusBox" class="mt-box"></div>
+    </div>
+  </div>
+</section>
+  
   <!-- CHECK IN -->
   <section id="pageCheckIn" class="page">
     <div class="container narrow">
@@ -220,6 +262,7 @@
       <button class="btn-main" onclick="teacherTab('teacherCourseBox')">รายวิชา</button>
       <button class="btn-main" onclick="teacherTab('teacherStudentBox')">นักศึกษา</button>
       <button class="btn-main" onclick="teacherTab('teacherAttendanceBox')">เช็คชื่อ</button>
+      <button class="btn-main" onclick="teacherTab('teacherAssignmentBox')">ชิ้นงาน</button>
     </div>
 
     <div id="teacherCourseBox" class="teacher-box active">
@@ -288,6 +331,43 @@
         <div id="teacherAttendanceStatus" class="mt-box"></div>
       </div>
     </div>
+    <div id="teacherAssignmentBox" class="teacher-box">
+  <div class="card">
+    <h2>จัดการชิ้นงาน / รายละเอียดการส่งงาน</h2>
+
+    <label>เลือกรายวิชา</label>
+    <select id="teacherAssignmentCourse"></select>
+
+    <label>คอลัมน์คะแนนใน Sheet</label>
+    <input id="assignmentColumn" placeholder="เช่น D, E, F, J">
+
+    <label>ชื่อชิ้นงาน</label>
+    <input id="assignmentTitle" placeholder="เช่น ชิ้นงานที่ 1 วิเคราะห์สถานการณ์">
+
+    <label>รายละเอียดงาน</label>
+    <textarea id="assignmentDescription" rows="5" placeholder="คำสั่งงาน / รายละเอียด / เกณฑ์เบื้องต้น"></textarea>
+
+    <label>คะแนนเต็ม</label>
+    <input id="assignmentMaxScore" type="number" placeholder="เช่น 10">
+
+    <label>วันกำหนดส่ง</label>
+    <input id="assignmentDueDate" type="date">
+
+    <button class="btn-main full" onclick="teacherCreateAssignment()">บันทึกชิ้นงาน</button>
+
+    <hr>
+
+    <h3>รายงานการส่งงาน</h3>
+
+    <label>คอลัมน์ชิ้นงานที่ต้องการตรวจ</label>
+    <input id="submissionReportColumn" placeholder="เช่น D">
+
+    <button class="btn-soft full" onclick="teacherLoadSubmissionReport()">โหลดรายงานส่งงาน</button>
+
+    <div id="teacherSubmissionReportBox" class="mt-box"></div>
+  </div>
+</div>
+    
   </div>
 </section>
   
