@@ -336,6 +336,7 @@
       <button class="btn-main" onclick="teacherTab('teacherAttendanceBox')">เช็คชื่อ</button>
       <button class="btn-main" onclick="teacherTab('teacherAssignmentBox')">ชิ้นงาน</button>
       <button class="btn-main" onclick="teacherTab('teacherLeaveBox')">ใบลา</button>
+      <button class="btn-main" onclick="teacherTab('teacherScoreBox');teacherPrepareScorePage()">คะแนน</button>
     </div>
 
     <div id="teacherCourseBox" class="teacher-box active">
@@ -455,6 +456,48 @@
     <button class="btn-main full" onclick="teacherLoadLeaveRequests()">โหลดรายการลา</button>
 
     <div id="teacherLeaveBoxList" class="mt-box"></div>
+  </div>
+</div>
+
+    <div id="teacherScoreBox" class="teacher-box">
+  <div class="card">
+    <h2>กรอกคะแนนรายคน</h2>
+
+    <label>เลือกรายวิชา</label>
+    <select id="teacherScoreCourse" onchange="teacherLoadScoreAssignments()"></select>
+
+    <label>เลือกชิ้นงาน / คอลัมน์คะแนน</label>
+    <select id="teacherScoreAssignment"></select>
+
+    <label>ค้นหานักศึกษา</label>
+    <input id="scoreStudentSearch" placeholder="พิมพ์รหัสหรือชื่อ" oninput="teacherSearchStudentsForScore()">
+
+    <div id="scoreStudentResults" class="mt-box"></div>
+
+    <hr>
+
+    <h3>บันทึกคะแนน</h3>
+
+    <label>นักศึกษาที่เลือก</label>
+    <input id="selectedScoreStudent" readonly placeholder="ยังไม่ได้เลือกนักศึกษา">
+    <input id="selectedScoreStudentId" type="hidden">
+
+    <label>คะแนน</label>
+    <input id="scoreValue" type="number" placeholder="กรอกคะแนน">
+
+    <label>หมายเหตุ / คอมเมนต์</label>
+    <textarea id="scoreComment" rows="3" placeholder="ถ้ามี"></textarea>
+
+    <button class="btn-main full" onclick="teacherSaveScore()">บันทึกคะแนน</button>
+
+    <hr>
+
+    <h3>รายงานคะแนน</h3>
+
+    <button class="btn-soft full" onclick="teacherLoadScoreReport()">โหลดรายงานคะแนน</button>
+    <button class="btn-soft full" onclick="syncScoresToGoogleSheet()">ซิงค์คะแนนคอลัมน์นี้เข้า Google Sheet</button>
+
+    <div id="teacherScoreReportBox" class="mt-box"></div>
   </div>
 </div>
     
