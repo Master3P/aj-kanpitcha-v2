@@ -419,10 +419,10 @@ async function refreshTeacherCourses(){
     ? COURSES.map(c => `<option value="${esc(c.id)}">${esc(c.display_name || c.course_name)}</option>`).join('')
     : '<option value="">ยังไม่มีรายวิชา</option>';
 
-  ['teacherStudentCourse','teacherAttendanceCourse'].forEach(id => {
+  ['teacherStudentCourse','teacherAttendanceCourse','teacherAssignmentCourse'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.innerHTML = html;
-  });
+});
 
   renderCourses();
 }
