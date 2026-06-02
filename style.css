@@ -555,3 +555,59 @@ th{
     display:none;
   }
 }
+.teacher-link{
+  margin-top:14px;
+  background:transparent;
+  color:var(--purple-800);
+  font-weight:900;
+  text-decoration:underline;
+}
+
+.teacher-tabs{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.teacher-box{
+  display:none;
+}
+
+.teacher-box.active{
+  display:block;
+}
+
+.mt-box{
+  margin-top:22px;
+}
+
+.student-row{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  padding:12px 0;
+  border-bottom:1px solid var(--line);
+}
+
+.student-row b{
+  color:var(--purple-900);
+}
+
+.status-box{
+  border:1px solid var(--line);
+  border-radius:22px;
+  padding:18px;
+  background:#fff;
+}
+
+.status-open{
+  color:#0f9f5f;
+  font-weight:900;
+}
+
+.status-close{
+  color:#9a3412;
+  font-weight:900;
+}
