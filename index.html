@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>AJ.Kanpitcha v2</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+</head>
+
+<body onload="initApp()">
+  <div id="toast" class="toast"></div>
+
+  <div id="loading" class="loading hidden">
+    <div class="loading-card">
+      <div class="loading-ring">👤</div>
+      <h2 id="loadingTitle">กำลังดำเนินการ</h2>
+      <p id="loadingText">กรุณารอสักครู่...</p>
+      <div class="dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">🎓</div>
+      <div>
+        <b>AJ.Kanpitcha</b>
+        <small>ระบบจัดการชั้นเรียน v2</small>
+      </div>
+    </div>
+    <div class="pill" id="dateBox"></div>
+  </header>
+
+  <!-- STUDENT LOGIN -->
+  <section id="pageLogin" class="page active">
+    <div class="login-wrap">
+      <div class="login-hero">
+        <h1>ระบบจัดการ<br>การเรียนส่วนตัว</h1>
+        <p>สำหรับเช็คชื่อ ส่งงาน ติดตามสถานะ และลดการสื่อสารซ้ำในรายวิชา</p>
+
+        <div class="feature-grid">
+          <div class="feature">✅ เช็คชื่อเร็ว</div>
+          <div class="feature">📁 ส่งงาน</div>
+          <div class="feature">📝 ลาเรียน</div>
+        </div>
+      </div>
+
+      <div class="login-card">
+        <div class="login-icon">👩‍🎓</div>
+        <h2>เข้าสู่ระบบนักศึกษา</h2>
+        <div class="chip">Student Access</div>
+
+        <label>เลือกรายวิชา</label>
+        <div class="row-inline">
+          <select id="loginCourse"></select>
+          <button class="btn-soft small" onclick="loadCoursesSilent()">รีเฟรช</button>
+        </div>
+
+        <label>รหัสนักศึกษา</label>
+        <input id="loginStudentId" placeholder="เช่น 6611007001">
+
+        <label>ชื่อ - นามสกุล</label>
+        <input id="loginFullName" placeholder="ชื่อจริง นามสกุล">
+
+        <button class="btn-main full" onclick="studentLogin()">เข้าสู่ระบบ</button>
+
+        <div class="note">
+          ใช้สำหรับเรียนกับอาจารย์กานต์พิชชาเท่านั้น
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RULES -->
+  <section id="pageRules" class="page">
+    <div class="container narrow">
+      <div class="card center">
+        <h1>กติกาการเรียน</h1>
+        <div id="agreementImageBox"></div>
+        <p id="agreementText" class="rule-text"></p>
+        <button class="btn-gold full" onclick="acceptRules()">รับทราบ / ยอมรับ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="pageDashboard" class="page">
+    <div class="container">
+      <div class="head">
+        <div>
+          <h1>เมนูนักศึกษา</h1>
+          <p id="studentInfo"></p>
+        </div>
+        <button class="btn-soft" onclick="refreshStudentData()">รีเฟรช</button>
+      </div>
+
+      <div class="menu-grid">
+        <div class="menu-card" onclick="openCheckInPage()">
+          <div class="menu-icon">📝</div>
+          <b>เช็คชื่อเข้าเรียน</b>
+          <span>กรอกรหัสเข้าเรียนจากอาจารย์</span>
+        </div>
+
+        <div class="menu-card disabled">
+          <div class="menu-icon">✨</div>
+          <b>คะแนนพิเศษ</b>
+          <span>จะเปิดใน Phase ถัดไป</span>
+        </div>
+
+        <div class="menu-card disabled">
+          <div class="menu-icon">📁</div>
+          <b>ส่งงาน</b>
+          <span>จะเปิดใน Phase ถัดไป</span>
+        </div>
+
+        <div class="menu-card disabled">
+          <div class="menu-icon">📌</div>
+          <b>ตรวจสอบการส่งงาน</b>
+          <span>จะเปิดใน Phase ถัดไป</span>
+        </div>
+
+        <div class="menu-card disabled">
+          <div class="menu-icon">📄</div>
+          <b>ลาเรียน</b>
+          <span>จะเปิดใน Phase ถัดไป</span>
+        </div>
+
+        <div class="menu-card" onclick="openGuidePage()">
+          <div class="menu-icon">❓</div>
+          <b>วิธีใช้งานระบบ</b>
+          <span>คำแนะนำการใช้งาน</span>
+        </div>
+      </div>
+
+      <div class="credit">Created by AJ.Kanpitcha</div>
+    </div>
+  </section>
+
+  <!-- CHECK IN -->
+  <section id="pageCheckIn" class="page">
+    <div class="container narrow">
+      <div class="head">
+        <div>
+          <h1>เช็คชื่อเข้าเรียน</h1>
+          <p>กรอกรหัสเข้าเรียนที่ได้รับจากอาจารย์</p>
+        </div>
+        <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+      </div>
+
+      <div class="card">
+        <div class="stat-grid" id="attendanceStats"></div>
+
+        <div id="attendanceTable"></div>
+
+        <label>รหัสเข้าเรียน</label>
+        <input id="checkPin" placeholder="กรอกรหัสเข้าเรียน">
+
+        <button class="btn-main full" onclick="studentCheckIn()">เช็คชื่อ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- GUIDE -->
+  <section id="pageGuide" class="page">
+    <div class="container narrow">
+      <div class="head">
+        <div>
+          <h1>วิธีใช้งานระบบ</h1>
+          <p>คำแนะนำสำหรับนักศึกษา</p>
+        </div>
+        <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+      </div>
+
+      <div class="card">
+        <div id="guideBox" class="guide-text"></div>
+      </div>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
