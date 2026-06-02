@@ -419,7 +419,7 @@ async function refreshTeacherCourses(){
     ? COURSES.map(c => `<option value="${esc(c.id)}">${esc(c.display_name || c.course_name)}</option>`).join('')
     : '<option value="">ยังไม่มีรายวิชา</option>';
 
-  ['teacherStudentCourse','teacherAttendanceCourse','teacherAssignmentCourse','teacherLeaveCourse'].forEach(id => {
+  ['teacherStudentCourse','teacherAttendanceCourse','teacherAssignmentCourse','teacherLeaveCourse','teacherScoreCourse'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.innerHTML = html;
 });
@@ -1416,5 +1416,280 @@ async function syncCoursesFromGoogleSheet(){
   } catch(err) {
     hideLoading();
     alert('ซิงค์ไม่สำเร็จ: ' + err.message);
+  }
+}
+
+// =====================================================
+// PHASE 7 - Manual Score Entry + Sync to Google Sheet
+// =====================================================
+
+let SCORE_ASSIGNMENTS = [];
+
+async function teacherPrepareScorePage(){
+  await refreshTeacherCourses();
+  await teacherLoadScoreAssignments();
+}
+
+async function teacherLoadScoreAssignments(){
+  const token = getTeacherToken();
+  const courseId = val('teacherScoreCourse');
+  const select = document.getElementById('teacherScoreAssignment');
+
+  if(!token || !courseId || !select) return;
+
+  select.innerHTML = '<option value="">กำลังโหลดชิ้นงาน...</option>';
+
+  try {
+    const { data, error } = await sb.rpc('teacher_get_assignments_v2', {
+      p_token: token,
+      p_course_id: courseId
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      select.innerHTML = '<option value="">โหลดชิ้นงานไม่สำเร็จ</option>';
+      toast(data.message || 'โหลดชิ้นงานไม่สำเร็จ');
+      return;
+    }
+
+    SCORE_ASSIGNMENTS = data.data || [];
+
+    select.innerHTML = SCORE_ASSIGNMENTS.length
+      ? SCORE_ASSIGNMENTS.map(a => `
+          <option value="${esc(a.item_column)}">
+            ${esc(a.item_column)} - ${esc(a.title)} (${esc(a.max_score || '-')} คะแนน)
+          </option>
+        `).join('')
+      : '<option value="">ยังไม่มีชิ้นงาน</option>';
+
+  } catch(err) {
+    select.innerHTML = '<option value="">โหลดชิ้นงานไม่สำเร็จ</option>';
+    toast('โหลดชิ้นงานไม่สำเร็จ');
+  }
+}
+
+let scoreSearchTimer = null;
+
+function teacherSearchStudentsForScore(){
+  clearTimeout(scoreSearchTimer);
+  scoreSearchTimer = setTimeout(teacherSearchStudentsForScoreNow, 250);
+}
+
+async function teacherSearchStudentsForScoreNow(){
+  const token = getTeacherToken();
+  const courseId = val('teacherScoreCourse');
+  const search = val('scoreStudentSearch');
+  const box = document.getElementById('scoreStudentResults');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+
+  if(!search){
+    box.innerHTML = '<div class="note">พิมพ์รหัสหรือชื่อเพื่อค้นหา</div>';
+    return;
+  }
+
+  box.innerHTML = '<div class="note">กำลังค้นหา...</div>';
+
+  try {
+    const { data, error } = await sb.rpc('teacher_search_students_for_score_v2', {
+      p_token: token,
+      p_course_id: courseId,
+      p_search: search
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const rows = data.data || [];
+
+    box.innerHTML = rows.length
+      ? rows.map(s => `
+          <button class="btn-soft small" onclick="selectScoreStudent('${esc(s.student_id)}','${esc(s.full_name)}')">
+            ${esc(s.student_id)} ${esc(s.full_name)}
+          </button>
+        `).join(' ')
+      : '<div class="note">ไม่พบนักศึกษา</div>';
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">ค้นหาไม่สำเร็จ: ${esc(err.message)}</div>`;
+  }
+}
+
+function selectScoreStudent(studentId, fullName){
+  document.getElementById('selectedScoreStudentId').value = studentId;
+  document.getElementById('selectedScoreStudent').value = `${studentId} ${fullName}`;
+}
+
+async function teacherSaveScore(){
+  const token = getTeacherToken();
+  const courseId = val('teacherScoreCourse');
+  const itemColumn = val('teacherScoreAssignment');
+  const studentId = val('selectedScoreStudentId');
+  const score = Number(val('scoreValue'));
+  const comment = val('scoreComment');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+  if(!itemColumn) return toast('กรุณาเลือกชิ้นงาน');
+  if(!studentId) return toast('กรุณาเลือกนักศึกษา');
+  if(Number.isNaN(score)) return toast('กรุณากรอกคะแนน');
+
+  showLoading('กำลังบันทึกคะแนน', 'ระบบกำลังบันทึกคะแนนลงฐานข้อมูล...');
+
+  try {
+    const { data, error } = await sb.rpc('teacher_save_score_v2', {
+      p_token: token,
+      p_course_id: courseId,
+      p_student_id: studentId,
+      p_item_column: itemColumn,
+      p_score: score,
+      p_teacher_comment: comment
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'บันทึกคะแนนไม่สำเร็จ');
+      return;
+    }
+
+    toast('บันทึกคะแนนสำเร็จ');
+
+    document.getElementById('scoreValue').value = '';
+    document.getElementById('scoreComment').value = '';
+
+    await teacherLoadScoreReport();
+
+  } catch(err) {
+    hideLoading();
+    alert('บันทึกคะแนนไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function teacherLoadScoreReport(){
+  const token = getTeacherToken();
+  const courseId = val('teacherScoreCourse');
+  const itemColumn = val('teacherScoreAssignment');
+  const box = document.getElementById('teacherScoreReportBox');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+  if(!itemColumn) return toast('กรุณาเลือกชิ้นงาน');
+
+  box.innerHTML = 'กำลังโหลดรายงานคะแนน...';
+
+  try {
+    const { data, error } = await sb.rpc('teacher_get_score_report_v2', {
+      p_token: token,
+      p_course_id: courseId,
+      p_item_column: itemColumn
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const rows = data.data || [];
+
+    box.innerHTML = rows.length
+      ? `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>รหัส</th>
+                <th>ชื่อ</th>
+                <th>คะแนน</th>
+                <th>หมายเหตุ</th>
+                <th>สถานะซิงค์</th>
+                <th>แก้ไขล่าสุด</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r => `
+                <tr>
+                  <td>${esc(r.student_id)}</td>
+                  <td>${esc(r.full_name)}</td>
+                  <td>${r.score ?? '-'}</td>
+                  <td>${esc(r.teacher_comment || '-')}</td>
+                  <td>${esc(r.sync_status || '-')}</td>
+                  <td>${formatDateTime(r.updated_at)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `
+      : '<div class="note">ยังไม่มีข้อมูลคะแนน</div>';
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">โหลดรายงานไม่สำเร็จ: ${esc(err.message)}</div>`;
+  }
+}
+
+async function syncScoresToGoogleSheet(){
+  const token = getTeacherToken();
+  const courseId = val('teacherScoreCourse');
+  const itemColumn = val('teacherScoreAssignment');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+  if(!itemColumn) return toast('กรุณาเลือกชิ้นงาน');
+
+  if(!BRIDGE_URL || BRIDGE_URL.includes('ใส่')){
+    return toast('ยังไม่ได้ตั้งค่า BRIDGE_URL ใน config.js');
+  }
+
+  showLoading('กำลังซิงค์คะแนน', 'ระบบกำลังเขียนคะแนนลง Google Sheet...');
+
+  try {
+    const res = await fetch(BRIDGE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify({
+        action: 'syncScoresToSheet',
+        courseId: courseId,
+        itemColumn: itemColumn
+      })
+    });
+
+    const data = await res.json();
+
+    hideLoading();
+
+    if(!data.ok){
+      alert(data.message || 'ซิงค์คะแนนไม่สำเร็จ');
+      return;
+    }
+
+    const d = data.data || {};
+
+    alert(
+      'ซิงค์คะแนนสำเร็จ\n' +
+      'รายวิชา: ' + (d.courseName || '-') + '\n' +
+      'ชีต: ' + (d.sheetName || '-') + '\n' +
+      'คอลัมน์: ' + (d.itemColumn || '-') + '\n' +
+      'อัปเดต: ' + (d.updated || 0) + ' รายการ\n' +
+      'ไม่พบรหัสในชีต: ' + (d.missing || 0) + ' รายการ'
+    );
+
+    await teacherLoadScoreReport();
+
+  } catch(err) {
+    hideLoading();
+    alert('ซิงค์คะแนนไม่สำเร็จ: ' + err.message);
   }
 }
