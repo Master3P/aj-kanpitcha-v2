@@ -74,6 +74,7 @@
         <div class="note">
           ใช้สำหรับเรียนกับอาจารย์กานต์พิชชาเท่านั้น
         </div>
+        <button class="teacher-link" onclick="showTeacherLogin()">เข้าสู่ระบบอาจารย์</button>
       </div>
     </div>
   </section>
@@ -184,6 +185,112 @@
     </div>
   </section>
 
+  <!-- TEACHER LOGIN -->
+<section id="pageTeacherLogin" class="page">
+  <div class="container narrow">
+    <div class="login-card">
+      <div class="login-icon">👩‍🏫</div>
+      <h2>เข้าสู่ระบบอาจารย์</h2>
+      <div class="chip">Admin / Teacher Access</div>
+
+      <label>ชื่อผู้ใช้</label>
+      <input id="teacherUser" value="admin">
+
+      <label>รหัสผ่าน</label>
+      <input id="teacherPass" type="password" placeholder="กรอกรหัสผ่าน">
+
+      <button class="btn-main full" onclick="teacherLogin()">เข้าสู่ระบบ</button>
+      <button class="btn-soft full" onclick="showPage('pageLogin')">กลับหน้านักศึกษา</button>
+    </div>
+  </div>
+</section>
+
+<!-- TEACHER PANEL -->
+<section id="pageTeacherPanel" class="page">
+  <div class="container">
+    <div class="head">
+      <div>
+        <h1>แผงควบคุมอาจารย์</h1>
+        <p id="teacherInfo">จัดการรายวิชา นักศึกษา และรอบเช็คชื่อ</p>
+      </div>
+      <button class="btn-soft" onclick="teacherLogout()">ออกจากระบบ</button>
+    </div>
+
+    <div class="teacher-tabs">
+      <button class="btn-main" onclick="teacherTab('teacherCourseBox')">รายวิชา</button>
+      <button class="btn-main" onclick="teacherTab('teacherStudentBox')">นักศึกษา</button>
+      <button class="btn-main" onclick="teacherTab('teacherAttendanceBox')">เช็คชื่อ</button>
+    </div>
+
+    <div id="teacherCourseBox" class="teacher-box active">
+      <div class="card">
+        <h2>เพิ่มรายวิชา</h2>
+
+        <label>ชื่อรายวิชา</label>
+        <input id="courseName" placeholder="เช่น 1/69 POL322/POL401 กระบวนการนโยบายสาธารณะ">
+
+        <label>ชื่อที่แสดงให้นักศึกษาเห็น</label>
+        <input id="courseDisplayName" placeholder="ถ้าเว้นว่าง จะใช้ชื่อรายวิชา">
+
+        <label>Google Sheet ID</label>
+        <input id="courseSheetId" placeholder="ใส่ภายหลังได้">
+
+        <label>ชื่อชีตคะแนน</label>
+        <input id="courseSheetName" placeholder="ใส่ภายหลังได้">
+
+        <button class="btn-main full" onclick="teacherCreateCourse()">เพิ่มรายวิชา</button>
+      </div>
+    </div>
+
+    <div id="teacherStudentBox" class="teacher-box">
+      <div class="card">
+        <h2>เพิ่มนักศึกษาเข้ารายวิชา</h2>
+
+        <label>เลือกรายวิชา</label>
+        <select id="teacherStudentCourse"></select>
+
+        <label>รหัสนักศึกษา</label>
+        <input id="newStudentId" placeholder="เช่น 6611007057">
+
+        <label>ชื่อ - นามสกุล</label>
+        <input id="newStudentName" placeholder="ชื่อจริง นามสกุล">
+
+        <label>ลำดับ / แถวใน Sheet</label>
+        <input id="newStudentRow" type="number" placeholder="เช่น 7">
+
+        <button class="btn-main full" onclick="teacherAddStudent()">บันทึกนักศึกษา</button>
+        <button class="btn-soft full" onclick="teacherLoadStudents()">โหลดรายชื่อนักศึกษา</button>
+
+        <div id="teacherStudentList" class="mt-box"></div>
+      </div>
+    </div>
+
+    <div id="teacherAttendanceBox" class="teacher-box">
+      <div class="card">
+        <h2>เปิดรอบเช็คชื่อ</h2>
+
+        <label>เลือกรายวิชา</label>
+        <select id="teacherAttendanceCourse"></select>
+
+        <label>ชื่อรอบ</label>
+        <input id="attLabel" placeholder="เช่น รอบ 1, รอบเช้า, สอบย่อย">
+
+        <label>รหัสเข้าเรียน</label>
+        <input id="attPin" placeholder="เช่น 1234">
+
+        <label>เวลาเปิดรับ นาที</label>
+        <input id="attDuration" type="number" value="10">
+
+        <button class="btn-main full" onclick="teacherOpenAttendance()">เปิดเช็คชื่อ</button>
+        <button class="btn-soft full" onclick="teacherCloseAttendance()">ปิดเช็คชื่อ</button>
+        <button class="btn-soft full" onclick="teacherLoadAttendanceStatus()">โหลดสถานะ</button>
+
+        <div id="teacherAttendanceStatus" class="mt-box"></div>
+      </div>
+    </div>
+  </div>
+</section>
+  
   <script src="app.js"></script>
 </body>
 </html>
