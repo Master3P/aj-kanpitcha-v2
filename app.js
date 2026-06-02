@@ -1408,7 +1408,8 @@ async function syncCoursesFromGoogleSheet(){
       'ไฟล์: ' + (d.spreadsheetName || '-') + '\n' +
       'นำเข้ารายวิชา: ' + (d.importedCourses || 0) + '\n' +
       'ข้ามชีต: ' + (d.skippedSheets || 0) + '\n' +
-      'นำเข้านักศึกษา: ' + (d.importedStudents || 0)
+      'นำเข้านักศึกษา: ' + (d.importedStudents || 0) + '\n' +
+      'นำเข้าชิ้นงาน: ' + (d.importedAssignments || 0)
     );
 
     await refreshTeacherCourses();
