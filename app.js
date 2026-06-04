@@ -4274,3 +4274,62 @@ async function teacherUploadDownloadFile(){
     alert('อัปโหลดไฟล์ไม่สำเร็จ: ' + normalizeErrorMessage(err));
   }
 }
+
+// =====================================================
+// UI SIMPLIFY PHASE 1
+// Keep teacher sidebar fixed on desktop
+// =====================================================
+
+function applyTeacherSidebarMode(){
+  const isMobile = window.innerWidth <= 900;
+
+  if(isMobile){
+    document.body.classList.add('teacher-sidebar-hidden');
+
+    const btn = document.getElementById('teacherSidebarToggle');
+    if(btn){
+      btn.style.display = 'block';
+      btn.innerHTML = '☰ เมนู';
+    }
+
+  }else{
+    document.body.classList.remove('teacher-sidebar-hidden');
+
+    const btn = document.getElementById('teacherSidebarToggle');
+    if(btn){
+      btn.style.display = 'none';
+    }
+  }
+}
+
+window.addEventListener('resize', applyTeacherSidebarMode);
+
+const _oldTeacherTabSimplify = typeof teacherTab === 'function' ? teacherTab : null;
+
+teacherTab = function(id){
+  document.querySelectorAll('.teacher-box').forEach(x => {
+    x.classList.remove('active');
+  });
+
+  const target = document.getElementById(id);
+  if(target){
+    target.classList.add('active');
+  }
+
+  document.querySelectorAll('#pageTeacherPanel .teacher-tabs button').forEach(btn => {
+    btn.classList.remove('active-tab');
+
+    const click = btn.getAttribute('onclick') || '';
+    if(click.includes(id)){
+      btn.classList.add('active-tab');
+    }
+  });
+
+  applyTeacherSidebarMode();
+
+  // ให้ scroll เฉพาะพื้นที่ content ด้านขวากลับบนสุด
+  const activeBox = document.querySelector('#pageTeacherPanel .teacher-box.active');
+  if(activeBox){
+    activeBox.scrollTo({ top:0, behavior:'smooth' });
+  }
+};
