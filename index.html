@@ -100,8 +100,15 @@
           <p id="studentInfo"></p>
         </div>
         <button class="btn-soft" onclick="refreshStudentData()">รีเฟรช</button>
+        <button class="btn-soft" onclick="studentLogout()">ออกจากระบบ</button>
       </div>
 
+      <div class="menu-card" onclick="openLearningRulesPage(false)">
+        <div class="menu-icon">📌</div>
+          <b>กติกาการเรียน</b>
+          <span>อ่านกติกาและแนวทางการใช้ระบบ</span>
+      </div>
+      
       <div class="menu-grid">
         <div class="menu-card" onclick="openCheckInPage()">
           <div class="menu-icon">📝</div>
@@ -364,6 +371,30 @@
     </div>
   </div>
 </section>
+
+  <!-- LEARNING RULES -->
+<section id="pageLearningRules" class="page">
+  <div class="container">
+    <div class="student-page-title">
+      <div>
+        <h1>กติกาการเรียน</h1>
+        <p>โปรดอ่านกติกาและแนวทางการใช้ระบบก่อนเข้าใช้งาน</p>
+      </div>
+      <button id="rulesCloseTopBtn" class="btn-soft" onclick="closeLearningRules()">ปิด</button>
+    </div>
+
+    <div class="student-zone hero">
+      <div id="rulesImageBox" class="mt-box"></div>
+
+      <div id="rulesTextBox" class="student-status-card mt-box"></div>
+
+      <div style="margin-top:20px;display:flex;gap:12px;flex-wrap:wrap;">
+        <button id="rulesAcceptBtn" class="btn-main" onclick="acceptLearningRules()">รับทราบ / ยอมรับ</button>
+        <button id="rulesCloseBtn" class="btn-soft" onclick="closeLearningRules()">ปิดและเข้าสู่เมนู</button>
+      </div>
+    </div>
+  </div>
+</section>
   
   <!-- CHECK IN -->
 <section id="pageCheckIn" class="page">
@@ -463,6 +494,7 @@
       <button class="btn-main" onclick="teacherTab('teacherScoreBox');teacherPrepareScorePage()">คะแนน</button>
       <button class="btn-main" onclick="teacherTab('teacherFilesBox');teacherPrepareFilesPage()">เอกสาร</button>
       <button class="btn-main" onclick="teacherTab('teacherSettingsBox');teacherLoadSystemHealth()">ตั้งค่า</button>
+      <button class="btn-main" onclick="teacherTab('teacherRulesBox');teacherLoadLearningRules()">กติกา</button>
       <button class="btn-main" onclick="teacherTab('teacherExportBox');teacherPrepareExportPage()">Export</button>
     </div>
 
@@ -864,6 +896,38 @@
     <button class="btn-soft full" onclick="teacherLoadSystemHealth()">ตรวจสอบระบบ</button>
 
     <div id="systemHealthBox" class="mt-box"></div>
+  </div>
+</div>
+
+    <div id="teacherRulesBox" class="teacher-box">
+  <div class="card">
+    <div class="zone-title">
+      <div>
+        <h2>กติกาการเรียน</h2>
+        <p class="zone-subtitle">แก้ไขข้อความและภาพกติกาที่นักศึกษาเห็นหลังเข้าสู่ระบบ</p>
+      </div>
+      <button class="btn-soft" onclick="teacherLoadLearningRules()">โหลดกติกา</button>
+    </div>
+
+    <div class="teacher-two-col">
+      <div class="teacher-zone">
+        <h3>แก้ไขกติกา</h3>
+
+        <label>ข้อความกติกา</label>
+        <textarea id="teacherRuleText" rows="8" placeholder="พิมพ์กติกาการเรียน"></textarea>
+
+        <label>เปลี่ยนภาพกติกา</label>
+        <input id="teacherRuleImage" type="file" accept="image/png,image/jpeg">
+
+        <button class="btn-main full" onclick="teacherSaveLearningRules()">บันทึกกติกา</button>
+      </div>
+
+      <div class="teacher-zone soft">
+        <h3>ตัวอย่างที่นักศึกษาเห็น</h3>
+        <div id="teacherRulePreviewImage" class="mt-box"></div>
+        <div id="teacherRulePreviewText" class="student-status-card mt-box"></div>
+      </div>
+    </div>
   </div>
 </div>
 
