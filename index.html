@@ -115,6 +115,18 @@
           <span>ส่งคะแนนพิเศษจากการตอบคำถาม</span>
         </div>
 
+        <div class="menu-card" onclick="openMaterialsPage()">
+          <div class="menu-icon">📚</div>
+          <b>เอกสารประกอบการเรียน</b>
+          <span>ดูและดาวน์โหลดเอกสารรายวิชา</span>
+        </div>
+
+        <div class="menu-card" onclick="openDownloadFilesPage()">
+          <div class="menu-icon">📥</div>
+          <b>ดาวน์โหลดคำร้อง / เอกสาร</b>
+          <span>ดาวน์โหลดไฟล์แบบฟอร์มที่อาจารย์แนบไว้</span>
+        </div>
+        
         <div class="menu-card" onclick="openSubmissionPage()">
           <div class="menu-icon">📁</div>
           <b>ส่งงาน</b>
@@ -143,6 +155,42 @@
       <div class="credit">Created by AJ.Kanpitcha</div>
     </div>
   </section>
+  <!-- MATERIALS -->
+<section id="pageMaterials" class="page">
+  <div class="container">
+    <div class="head">
+      <div>
+        <h1>เอกสารประกอบการเรียน</h1>
+        <p>เอกสารที่อาจารย์แนบไว้สำหรับรายวิชานี้</p>
+      </div>
+      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+    </div>
+
+    <div class="card">
+      <button class="btn-soft" onclick="loadStudentMaterials()">รีเฟรชเอกสาร</button>
+      <div id="studentMaterialsBox" class="mt-box"></div>
+    </div>
+  </div>
+</section>
+
+<!-- DOWNLOAD FILES -->
+<section id="pageDownloadFiles" class="page">
+  <div class="container">
+    <div class="head">
+      <div>
+        <h1>ดาวน์โหลดคำร้อง / เอกสาร</h1>
+        <p>แบบฟอร์มและไฟล์ที่นักศึกษาสามารถดาวน์โหลดได้</p>
+      </div>
+      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+    </div>
+
+    <div class="card">
+      <button class="btn-soft" onclick="loadDownloadFiles()">รีเฟรชไฟล์</button>
+      <div id="downloadFilesBox" class="mt-box"></div>
+    </div>
+  </div>
+</section>
+  
 <!-- SPECIAL SCORE -->
 <section id="pageSpecialScore" class="page">
   <div class="container narrow">
@@ -337,6 +385,7 @@
       <button class="btn-main" onclick="teacherTab('teacherAssignmentBox')">ชิ้นงาน</button>
       <button class="btn-main" onclick="teacherTab('teacherLeaveBox')">ใบลา</button>
       <button class="btn-main" onclick="teacherTab('teacherScoreBox');teacherPrepareScorePage()">คะแนน</button>
+      <button class="btn-main" onclick="teacherTab('teacherFilesBox');teacherPrepareFilesPage()">เอกสาร</button>
     </div>
 
     <div id="teacherCourseBox" class="teacher-box active">
@@ -498,6 +547,46 @@
     <button class="btn-soft full" onclick="syncScoresToGoogleSheet()">ซิงค์คะแนนคอลัมน์นี้เข้า Google Sheet</button>
 
     <div id="teacherScoreReportBox" class="mt-box"></div>
+  </div>
+</div>
+    <div id="teacherFilesBox" class="teacher-box">
+  <div class="card">
+    <h2>เอกสารประกอบการเรียน</h2>
+
+    <label>เลือกรายวิชา</label>
+    <select id="teacherMaterialCourse"></select>
+
+    <label>ชื่อเอกสาร</label>
+    <input id="materialTitle" placeholder="เช่น เอกสารประกอบบทที่ 1">
+
+    <label>รายละเอียด</label>
+    <textarea id="materialDescription" rows="3" placeholder="คำอธิบายเอกสาร"></textarea>
+
+    <label>แนบไฟล์เอกสาร</label>
+    <input id="materialFile" type="file">
+
+    <button class="btn-main full" onclick="teacherUploadMaterial()">อัปโหลดเอกสารประกอบการเรียน</button>
+    <button class="btn-soft full" onclick="teacherLoadMaterials()">โหลดรายการเอกสาร</button>
+
+    <div id="teacherMaterialsBox" class="mt-box"></div>
+
+    <hr>
+
+    <h2>ไฟล์คำร้อง / เอกสารดาวน์โหลดทั่วไป</h2>
+
+    <label>ชื่อไฟล์</label>
+    <input id="downloadTitle" placeholder="เช่น คำร้องขอสอบ / ขอแก้ I">
+
+    <label>รายละเอียด</label>
+    <textarea id="downloadDescription" rows="3" placeholder="คำอธิบายไฟล์"></textarea>
+
+    <label>แนบไฟล์</label>
+    <input id="downloadFile" type="file">
+
+    <button class="btn-main full" onclick="teacherUploadDownloadFile()">อัปโหลดไฟล์ดาวน์โหลด</button>
+    <button class="btn-soft full" onclick="teacherLoadDownloadFiles()">โหลดไฟล์ดาวน์โหลด</button>
+
+    <div id="teacherDownloadFilesBox" class="mt-box"></div>
   </div>
 </div>
     
