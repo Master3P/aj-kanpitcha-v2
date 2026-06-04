@@ -155,19 +155,27 @@
       <div class="credit">Created by AJ.Kanpitcha</div>
     </div>
   </section>
+  
   <!-- MATERIALS -->
 <section id="pageMaterials" class="page">
   <div class="container">
-    <div class="head">
+    <div class="student-page-title">
       <div>
         <h1>เอกสารประกอบการเรียน</h1>
         <p>เอกสารที่อาจารย์แนบไว้สำหรับรายวิชานี้</p>
       </div>
-      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับเมนูหลัก</button>
     </div>
 
-    <div class="card">
-      <button class="btn-soft" onclick="loadStudentMaterials()">รีเฟรชเอกสาร</button>
+    <div class="student-zone">
+      <div class="zone-title">
+        <div>
+          <h2>รายการเอกสาร</h2>
+          <p class="zone-subtitle">กดเปิดไฟล์เพื่อดูหรือดาวน์โหลดเอกสาร</p>
+        </div>
+        <button class="btn-soft" onclick="loadStudentMaterials()">รีเฟรชเอกสาร</button>
+      </div>
+
       <div id="studentMaterialsBox" class="mt-box"></div>
     </div>
   </div>
@@ -176,16 +184,23 @@
 <!-- DOWNLOAD FILES -->
 <section id="pageDownloadFiles" class="page">
   <div class="container">
-    <div class="head">
+    <div class="student-page-title">
       <div>
         <h1>ดาวน์โหลดคำร้อง / เอกสาร</h1>
         <p>แบบฟอร์มและไฟล์ที่นักศึกษาสามารถดาวน์โหลดได้</p>
       </div>
-      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับเมนูหลัก</button>
     </div>
 
-    <div class="card">
-      <button class="btn-soft" onclick="loadDownloadFiles()">รีเฟรชไฟล์</button>
+    <div class="student-zone">
+      <div class="zone-title">
+        <div>
+          <h2>ไฟล์สำหรับดาวน์โหลด</h2>
+          <p class="zone-subtitle">เช่น คำร้องขอสอบ คำร้องขอแก้ I หรือแบบฟอร์มอื่น ๆ</p>
+        </div>
+        <button class="btn-soft" onclick="loadDownloadFiles()">รีเฟรชไฟล์</button>
+      </div>
+
       <div id="downloadFilesBox" class="mt-box"></div>
     </div>
   </div>
@@ -226,64 +241,101 @@
 
 <!-- LEAVE -->
 <section id="pageLeave" class="page">
-  <div class="container narrow">
-    <div class="head">
+  <div class="container">
+    <div class="student-page-title">
       <div>
         <h1>ลาเรียน</h1>
-        <p>ส่งใบลาเรียนพร้อมหลักฐาน ถ้ามี</p>
+        <p>ส่งใบลาเรียน พร้อมแนบหลักฐานถ้ามี และติดตามสถานะใบลา</p>
       </div>
-      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับเมนูหลัก</button>
     </div>
 
-    <div class="card">
-      <label>วันที่ลา</label>
-      <input id="leaveDate" type="date">
+    <div class="student-page-shell">
 
-      <label>ประเภทการลา</label>
-      <select id="leaveType">
-        <option value="ลากิจ">ลากิจ</option>
-        <option value="ลาป่วย">ลาป่วย</option>
-        <option value="อื่น ๆ">อื่น ๆ</option>
-      </select>
+      <div class="student-zone hero">
+        <h2>ส่งใบลา</h2>
 
-      <label>เหตุผล</label>
-      <textarea id="leaveReason" rows="4" placeholder="ระบุเหตุผลการลา"></textarea>
+        <div class="student-form-grid">
+          <div>
+            <label>วันที่ลา</label>
+            <input id="leaveDate" type="date">
+          </div>
 
-      <label>หลักฐานการลา ถ้ามี</label>
-      <input id="leaveFile" type="file">
+          <div>
+            <label>ประเภทการลา</label>
+            <select id="leaveType">
+              <option value="ลากิจ">ลากิจ</option>
+              <option value="ลาป่วย">ลาป่วย</option>
+              <option value="อื่น ๆ">อื่น ๆ</option>
+            </select>
+          </div>
 
-      <button class="btn-main full" onclick="studentSubmitLeave()">ส่งใบลา</button>
+          <div class="wide">
+            <label>เหตุผล</label>
+            <textarea id="leaveReason" rows="4" placeholder="ระบุเหตุผลการลา"></textarea>
+          </div>
 
-      <hr>
+          <div class="wide">
+            <label>หลักฐานการลา ถ้ามี</label>
+            <input id="leaveFile" type="file">
+          </div>
+        </div>
 
-      <h3>ประวัติการลา</h3>
-      <button class="btn-soft" onclick="loadStudentLeaveHistory()">รีเฟรชประวัติ</button>
-      <div id="leaveHistoryBox" class="mt-box"></div>
+        <button class="btn-main full" onclick="studentSubmitLeave()">ส่งใบลา</button>
+      </div>
+
+      <div class="student-zone">
+        <div class="zone-title">
+          <div>
+            <h2>ประวัติการลา</h2>
+            <p class="zone-subtitle">ดูสถานะใบลาที่ส่งไปแล้ว</p>
+          </div>
+          <button class="btn-soft" onclick="loadStudentLeaveHistory()">รีเฟรช</button>
+        </div>
+
+        <div id="leaveHistoryBox" class="mt-box"></div>
+      </div>
+
     </div>
   </div>
 </section>
   
 <!-- SUBMISSION -->
 <section id="pageSubmission" class="page">
-  <div class="container narrow">
-    <div class="head">
+  <div class="container">
+    <div class="student-page-title">
       <div>
         <h1>ส่งงาน</h1>
-        <p>เลือกชิ้นงาน แนบไฟล์ และกดส่งงาน</p>
+        <p>เลือกชิ้นงาน อ่านรายละเอียด และแนบไฟล์เพื่อส่งงาน</p>
       </div>
-      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับเมนูหลัก</button>
     </div>
 
-    <div class="card">
-      <label>งานที่ส่ง</label>
-      <select id="submissionAssignment" onchange="renderAssignmentDetail()"></select>
+    <div class="student-page-shell">
 
-      <div id="assignmentDetailBox" class="note"></div>
+      <div class="student-zone hero">
+        <h2>เลือกชิ้นงาน</h2>
 
-      <label>แนบไฟล์งาน</label>
-      <input id="submissionFile" type="file">
+        <label>งานที่ต้องการส่ง</label>
+        <select id="submissionAssignment" onchange="renderAssignmentDetail()"></select>
 
-      <button class="btn-main full" onclick="studentSubmitAssignment()">อัปโหลดและส่งงาน</button>
+        <div id="assignmentDetailBox" class="student-status-card mt-box"></div>
+      </div>
+
+      <div class="student-zone">
+        <h2>แนบไฟล์งาน</h2>
+        <p class="zone-subtitle">รองรับ PDF, DOCX, PPTX, XLSX, JPG, PNG ขนาดไม่เกิน 10 MB</p>
+
+        <label>ไฟล์งาน</label>
+        <input id="submissionFile" type="file">
+
+        <button class="btn-main full" onclick="studentSubmitAssignment()">อัปโหลดและส่งงาน</button>
+
+        <hr>
+
+        <button class="btn-soft full" onclick="openSubmissionStatusPage()">ตรวจสอบสถานะการส่งงาน</button>
+      </div>
+
     </div>
   </div>
 </section>
@@ -291,16 +343,23 @@
 <!-- SUBMISSION STATUS -->
 <section id="pageSubmissionStatus" class="page">
   <div class="container">
-    <div class="head">
+    <div class="student-page-title">
       <div>
         <h1>ตรวจสอบการส่งงาน</h1>
-        <p>ดูสถานะการส่งงานของตนเอง</p>
+        <p>ดูสถานะการส่งงานแต่ละชิ้นและเปิดไฟล์ล่าสุดที่ส่งไว้</p>
       </div>
-      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับเมนูหลัก</button>
     </div>
 
-    <div class="card">
-      <button class="btn-soft" onclick="loadStudentSubmissionStatus()">รีเฟรชสถานะ</button>
+    <div class="student-zone">
+      <div class="zone-title">
+        <div>
+          <h2>สถานะงานของฉัน</h2>
+          <p class="zone-subtitle">ถ้าส่งงานหลายครั้ง ระบบจะแสดงไฟล์ล่าสุด</p>
+        </div>
+        <button class="btn-soft" onclick="loadStudentSubmissionStatus()">รีเฟรชสถานะ</button>
+      </div>
+
       <div id="submissionStatusBox" class="mt-box"></div>
     </div>
   </div>
