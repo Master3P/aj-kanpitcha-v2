@@ -639,44 +639,85 @@
     <div id="teacherScoreReportBox" class="mt-box"></div>
   </div>
 </div>
+  
     <div id="teacherFilesBox" class="teacher-box">
   <div class="card">
-    <h2>เอกสารประกอบการเรียน</h2>
+    <div class="zone-title">
+      <div>
+        <h2>เอกสารและไฟล์ดาวน์โหลด</h2>
+        <p class="zone-subtitle">จัดการเอกสารประกอบการเรียนและไฟล์คำร้องสำหรับนักศึกษา</p>
+      </div>
+    </div>
 
-    <label>เลือกรายวิชา</label>
-    <select id="teacherMaterialCourse"></select>
+    <div class="teacher-zone soft">
+      <div class="zone-title">
+        <div>
+          <h3>เอกสารประกอบการเรียน</h3>
+          <p class="zone-subtitle">เพิ่มไฟล์เอกสารให้นักศึกษาเปิดดูตามรายวิชา</p>
+        </div>
+        <button class="btn-soft" onclick="teacherLoadMaterials()">โหลดรายการ</button>
+      </div>
 
-    <label>ชื่อเอกสาร</label>
-    <input id="materialTitle" placeholder="เช่น เอกสารประกอบบทที่ 1">
+      <div class="file-form-grid">
+        <div>
+          <label>รายวิชา</label>
+          <select id="teacherMaterialCourse"></select>
+        </div>
 
-    <label>รายละเอียด</label>
-    <textarea id="materialDescription" rows="3" placeholder="คำอธิบายเอกสาร"></textarea>
+        <div>
+          <label>ชื่อเอกสาร</label>
+          <input id="materialTitle" placeholder="เช่น เอกสารประกอบบทที่ 1">
+        </div>
 
-    <label>แนบไฟล์เอกสาร</label>
-    <input id="materialFile" type="file">
+        <div>
+          <label>แนบไฟล์</label>
+          <input id="materialFile" type="file">
+        </div>
 
-    <button class="btn-main full" onclick="teacherUploadMaterial()">อัปโหลดเอกสารประกอบการเรียน</button>
-    <button class="btn-soft full" onclick="teacherLoadMaterials()">โหลดรายการเอกสาร</button>
+        <div class="wide">
+          <label>รายละเอียด</label>
+          <textarea id="materialDescription" rows="3" placeholder="คำอธิบายเอกสาร"></textarea>
+        </div>
+      </div>
 
-    <div id="teacherMaterialsBox" class="mt-box"></div>
+      <button class="btn-main full" onclick="teacherUploadMaterial()">เพิ่มเอกสาร</button>
+
+      <div id="teacherMaterialsBox" class="mt-box"></div>
+    </div>
 
     <hr>
 
-    <h2>ไฟล์คำร้อง / เอกสารดาวน์โหลดทั่วไป</h2>
+    <div class="teacher-zone">
+      <div class="zone-title">
+        <div>
+          <h3>ไฟล์คำร้อง / เอกสารดาวน์โหลดทั่วไป</h3>
+          <p class="zone-subtitle">เพิ่มไฟล์ PDF หรือแบบฟอร์มให้นักศึกษาดาวน์โหลด</p>
+        </div>
+        <button class="btn-soft" onclick="teacherLoadDownloadFiles()">โหลดรายการ</button>
+      </div>
 
-    <label>ชื่อไฟล์</label>
-    <input id="downloadTitle" placeholder="เช่น คำร้องขอสอบ / ขอแก้ I">
+      <div class="file-form-grid">
+        <div>
+          <label>ชื่อไฟล์</label>
+          <input id="downloadTitle" placeholder="เช่น คำร้องขอสอบ">
+        </div>
 
-    <label>รายละเอียด</label>
-    <textarea id="downloadDescription" rows="3" placeholder="คำอธิบายไฟล์"></textarea>
+        <div>
+          <label>รายละเอียด</label>
+          <input id="downloadDescription" placeholder="คำอธิบายไฟล์">
+        </div>
 
-    <label>แนบไฟล์</label>
-    <input id="downloadFile" type="file">
+        <div>
+          <label>แนบไฟล์</label>
+          <input id="downloadFile" type="file">
+        </div>
+      </div>
 
-    <button class="btn-main full" onclick="teacherUploadDownloadFile()">อัปโหลดไฟล์ดาวน์โหลด</button>
-    <button class="btn-soft full" onclick="teacherLoadDownloadFiles()">โหลดไฟล์ดาวน์โหลด</button>
+      <button class="btn-main full" onclick="teacherUploadDownloadFile()">เพิ่มไฟล์คำร้อง</button>
 
-    <div id="teacherDownloadFilesBox" class="mt-box"></div>
+      <div id="teacherDownloadFilesBox" class="mt-box"></div>
+    </div>
+
   </div>
 </div>
 
