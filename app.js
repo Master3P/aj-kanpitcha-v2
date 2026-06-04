@@ -3313,3 +3313,153 @@ function renderAttendanceSummary(d){
     `).join('')
   );
 }
+
+// =====================================================
+// UI REVAMP PHASE 6 - Print + Final UX Helpers
+// =====================================================
+
+function printCurrentPage(){
+  window.print();
+}
+
+function ensurePrintButton(containerId){
+  const box = document.getElementById(containerId);
+  if(!box) return;
+
+  if(box.querySelector('.print-btn')) return;
+
+  const btn = document.createElement('button');
+  btn.className = 'print-btn';
+  btn.innerText = 'พิมพ์ / บันทึก PDF';
+  btn.onclick = printCurrentPage;
+
+  box.prepend(btn);
+}
+
+function addPrintButtonsToReports(){
+  [
+    'teacherDashboardSummary',
+    'teacherScoreReportBox',
+    'teacherLeaveBoxList',
+    'teacherSubmissionReportBox',
+    'teacherExportBoxResult',
+    'attendanceTable',
+    'submissionStatusBox',
+    'leaveHistoryBox'
+  ].forEach(id => ensurePrintButton(id));
+}
+
+// =====================================================
+// UI REVAMP PHASE 6 - Patch report functions to add print button
+// =====================================================
+
+const _oldTeacherLoadDashboard = typeof teacherLoadDashboard === 'function' ? teacherLoadDashboard : null;
+if(_oldTeacherLoadDashboard){
+  teacherLoadDashboard = async function(){
+    await _oldTeacherLoadDashboard();
+    addPrintButtonsToReports();
+  };
+}
+
+const _oldTeacherLoadScoreReport = typeof teacherLoadScoreReport === 'function' ? teacherLoadScoreReport : null;
+if(_oldTeacherLoadScoreReport){
+  teacherLoadScoreReport = async function(){
+    await _oldTeacherLoadScoreReport();
+    addPrintButtonsToReports();
+  };
+}
+
+const _oldTeacherLoadLeaveRequests = typeof teacherLoadLeaveRequests === 'function' ? teacherLoadLeaveRequests : null;
+if(_oldTeacherLoadLeaveRequests){
+  teacherLoadLeaveRequests = async function(){
+    await _oldTeacherLoadLeaveRequests();
+    addPrintButtonsToReports();
+  };
+}
+
+const _oldTeacherLoadSubmissionReport = typeof teacherLoadSubmissionReport === 'function' ? teacherLoadSubmissionReport : null;
+if(_oldTeacherLoadSubmissionReport){
+  teacherLoadSubmissionReport = async function(){
+    await _oldTeacherLoadSubmissionReport();
+    addPrintButtonsToReports();
+  };
+}
+
+const _oldLoadStudentSubmissionStatus = typeof loadStudentSubmissionStatus === 'function' ? loadStudentSubmissionStatus : null;
+if(_oldLoadStudentSubmissionStatus){
+  loadStudentSubmissionStatus = async function(){
+    await _oldLoadStudentSubmissionStatus();
+    addPrintButtonsToReports();
+  };
+}
+
+const _oldLoadStudentLeaveHistory = typeof loadStudentLeaveHistory === 'function' ? loadStudentLeaveHistory : null;
+if(_oldLoadStudentLeaveHistory){
+  loadStudentLeaveHistory = async function(){
+    await _oldLoadStudentLeaveHistory();
+    addPrintButtonsToReports();
+  };
+}
+
+// =====================================================
+// UI REVAMP PHASE 6 - Mobile sidebar default state
+// =====================================================
+
+function applyResponsiveSidebarDefault(){
+  if(window.innerWidth <= 900){
+    document.body.classList.add('teacher-sidebar-hidden');
+
+    const btn = document.getElementById('teacherSidebarToggle');
+    if(btn) btn.innerHTML = '☰ เมนู';
+  }
+}
+
+window.addEventListener('resize', applyResponsiveSidebarDefault);
+
+const _oldEnsureTeacherSidebarToggle = typeof ensureTeacherSidebarToggle === 'function' ? ensureTeacherSidebarToggle : null;
+
+if(_oldEnsureTeacherSidebarToggle){
+  ensureTeacherSidebarToggle = function(){
+    _oldEnsureTeacherSidebarToggle();
+    applyResponsiveSidebarDefault();
+  };
+}
+
+// =====================================================
+// UI REVAMP PHASE 6 - Better error messages
+// =====================================================
+
+function userFriendlyMessage(msg){
+  const text = String(msg || '');
+
+  if(text.includes('Failed to fetch')){
+    return 'เชื่อมต่อระบบไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตแล้วลองใหม่อีกครั้ง';
+  }
+
+  if(text.includes('permission denied')){
+    return 'ระบบยังไม่มีสิทธิ์เข้าถึงข้อมูล กรุณาตรวจการตั้งค่า Supabase';
+  }
+
+  if(text.includes('duplicate key')){
+    return 'ข้อมูลนี้มีอยู่แล้วในระบบ';
+  }
+
+  if(text.includes('Invalid key')){
+    return 'ชื่อไฟล์ไม่ถูกต้อง กรุณาเปลี่ยนชื่อไฟล์เป็นภาษาอังกฤษหรือลองอัปโหลดใหม่';
+  }
+
+  if(text.includes('JWT') || text.includes('token')){
+    return 'สิทธิ์เข้าใช้งานหมดอายุ กรุณาเข้าสู่ระบบใหม่';
+  }
+
+  if(text.includes('Gemini') || text.includes('API')){
+    return 'AI ตรวจงานไม่สำเร็จ กรุณาตรวจ API Key หรือชนิดไฟล์ที่ส่งตรวจ';
+  }
+
+  return text || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+}
+
+/* ทับ normalizeErrorMessage ให้สั้นและเป็นภาษาไทย */
+function normalizeErrorMessage(err){
+  return userFriendlyMessage(err?.message || err);
+}
