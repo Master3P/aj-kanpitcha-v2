@@ -2904,3 +2904,87 @@ function selectScoreStudent(studentId, fullName){
     `;
   }
 }
+
+// =====================================================
+// UI REVAMP PHASE 4 - Student File Cards
+// =====================================================
+
+async function loadStudentMaterials(){
+  const box = document.getElementById('studentMaterialsBox');
+  if(!box) return;
+
+  box.innerHTML = 'กำลังโหลดเอกสาร...';
+
+  try {
+    const { data, error } = await sb.rpc('student_get_materials_v2', {
+      p_course_id: STUDENT.course_id
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="student-empty">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const rows = data.data || [];
+
+    box.innerHTML = rows.length
+      ? `<div class="student-list-grid">
+          ${rows.map(r => `
+            <div class="student-file-card">
+              <div>
+                <span class="student-badge">เอกสาร</span><br><br>
+                <b>${esc(r.title)}</b><br>
+                <small>${esc(r.description || '-')}</small><br>
+                <small>ไฟล์: ${esc(r.file_name || '-')}</small>
+              </div>
+              <a class="btn-main" target="_blank" href="${esc(r.file_url)}">เปิดไฟล์</a>
+            </div>
+          `).join('')}
+        </div>`
+      : '<div class="student-empty">ยังไม่มีเอกสารประกอบการเรียน</div>';
+
+  } catch(err) {
+    box.innerHTML = `<div class="student-empty">โหลดเอกสารไม่สำเร็จ: ${esc(normalizeErrorMessage(err))}</div>`;
+  }
+}
+
+async function loadDownloadFiles(){
+  const box = document.getElementById('downloadFilesBox');
+  if(!box) return;
+
+  box.innerHTML = 'กำลังโหลดไฟล์...';
+
+  try {
+    const { data, error } = await sb.rpc('student_get_download_files_v2');
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="student-empty">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const rows = data.data || [];
+
+    box.innerHTML = rows.length
+      ? `<div class="student-list-grid">
+          ${rows.map(r => `
+            <div class="student-file-card">
+              <div>
+                <span class="student-badge">ดาวน์โหลด</span><br><br>
+                <b>${esc(r.title)}</b><br>
+                <small>${esc(r.description || '-')}</small><br>
+                <small>ไฟล์: ${esc(r.file_name || '-')}</small>
+              </div>
+              <a class="btn-main" target="_blank" href="${esc(r.file_url)}">ดาวน์โหลด</a>
+            </div>
+          `).join('')}
+        </div>`
+      : '<div class="student-empty">ยังไม่มีไฟล์ดาวน์โหลด</div>';
+
+  } catch(err) {
+    box.innerHTML = `<div class="student-empty">โหลดไฟล์ไม่สำเร็จ: ${esc(normalizeErrorMessage(err))}</div>`;
+  }
+}
