@@ -1365,3 +1365,88 @@ tr:hover td{
   border-radius:20px !important;
   padding:14px 22px !important;
 }
+
+/* =====================================================
+   UI FIX - Collapsible Sidebar
+   ปุ่มขีด ๆ เปิด/ปิดเมนูด้านซ้าย
+===================================================== */
+
+.teacher-sidebar-toggle{
+  position:fixed;
+  left:22px;
+  top:18px;
+  z-index:9999;
+  border:0;
+  border-radius:18px;
+  padding:12px 18px;
+  font-weight:900;
+  color:#fff;
+  background:linear-gradient(135deg,#3b006e,#7c3aed);
+  box-shadow:0 12px 28px rgba(63,0,117,.25);
+  cursor:pointer;
+}
+
+.teacher-sidebar-toggle:hover{
+  transform:translateY(-1px);
+}
+
+/* เวลาซ่อน Sidebar */
+body.teacher-sidebar-hidden #pageTeacherPanel .container{
+  grid-template-columns:1fr !important;
+}
+
+body.teacher-sidebar-hidden #pageTeacherPanel .teacher-tabs{
+  display:none !important;
+}
+
+body.teacher-sidebar-hidden #pageTeacherPanel .teacher-box{
+  grid-column:1 !important;
+}
+
+/* กันหัวข้อทับปุ่มเมนู */
+#pageTeacherPanel .head{
+  padding-left:120px !important;
+}
+
+/* ปรับปุ่มเมนูใน sidebar ไม่ให้ข้อความยาวแล้วล้น */
+#pageTeacherPanel .teacher-tabs button{
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+/* ให้ sidebar scroll สวยขึ้น */
+#pageTeacherPanel .teacher-tabs{
+  scrollbar-width:thin;
+  scrollbar-color:rgba(255,255,255,.35) transparent;
+}
+
+#pageTeacherPanel .teacher-tabs::-webkit-scrollbar{
+  width:8px;
+}
+
+#pageTeacherPanel .teacher-tabs::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.35);
+  border-radius:999px;
+}
+
+/* จอเล็ก ให้ปุ่มเมนูอยู่ชัด */
+@media(max-width:1100px){
+  .teacher-sidebar-toggle{
+    left:14px;
+    top:14px;
+  }
+
+  #pageTeacherPanel .head{
+    padding-left:24px !important;
+    padding-top:70px !important;
+  }
+
+  body.teacher-sidebar-hidden #pageTeacherPanel .teacher-tabs{
+    display:none !important;
+  }
+
+  body:not(.teacher-sidebar-hidden) #pageTeacherPanel .teacher-tabs{
+    display:flex !important;
+  }
+}
