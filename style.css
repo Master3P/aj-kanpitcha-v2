@@ -640,3 +640,52 @@ hr{
   font-weight:900;
   text-decoration:underline;
 }
+
+.dashboard-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:16px;
+}
+
+.dashboard-card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:24px;
+  padding:20px;
+  box-shadow:0 12px 26px rgba(63,0,117,.06);
+}
+
+.dashboard-card b{
+  display:block;
+  color:var(--purple-900);
+  font-size:16px;
+  margin-bottom:8px;
+}
+
+.dashboard-num{
+  color:var(--purple-900);
+  font-size:38px;
+  font-weight:900;
+  line-height:1;
+}
+
+.dashboard-warn{
+  border-color:#ffd6a6;
+  background:#fffaf0;
+}
+
+.dashboard-danger{
+  border-color:#fecaca;
+  background:#fff5f5;
+}
+
+.dashboard-good{
+  border-color:#bbf7d0;
+  background:#f0fdf4;
+}
+
+@media(max-width:900px){
+  .dashboard-grid{
+    grid-template-columns:1fr;
+  }
+}
