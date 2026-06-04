@@ -419,7 +419,7 @@ async function refreshTeacherCourses(){
     ? COURSES.map(c => `<option value="${esc(c.id)}">${esc(c.display_name || c.course_name)}</option>`).join('')
     : '<option value="">ยังไม่มีรายวิชา</option>';
 
-  ['teacherStudentCourse','teacherAttendanceCourse','teacherAssignmentCourse','teacherLeaveCourse','teacherScoreCourse'].forEach(id => {
+  ['teacherStudentCourse','teacherAttendanceCourse','teacherAssignmentCourse','teacherLeaveCourse','teacherScoreCourse','teacherMaterialCourse'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.innerHTML = html;
 });
@@ -1690,5 +1690,342 @@ async function syncScoresToGoogleSheet(){
   } catch(err) {
     hideLoading();
     alert('ซิงค์คะแนนไม่สำเร็จ: ' + err.message);
+  }
+}
+
+// =====================================================
+// PHASE 9 - Materials + Download Files
+// =====================================================
+
+const MAX_MATERIAL_FILE_SIZE = 20 * 1024 * 1024;
+
+const ALLOWED_MATERIAL_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'image/jpeg',
+  'image/png'
+];
+
+const ALLOWED_DOWNLOAD_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png'
+];
+
+async function openMaterialsPage(){
+  if(!STUDENT) return toast('กรุณาเข้าสู่ระบบก่อน');
+  showPage('pageMaterials');
+  await loadStudentMaterials();
+}
+
+async function loadStudentMaterials(){
+  const box = document.getElementById('studentMaterialsBox');
+  box.innerHTML = 'กำลังโหลดเอกสาร...';
+
+  try {
+    const { data, error } = await sb.rpc('student_get_materials_v2', {
+      p_course_id: STUDENT.course_id
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const rows = data.data || [];
+
+    box.innerHTML = rows.length
+      ? rows.map(r => `
+          <div class="student-row">
+            <div>
+              <b>${esc(r.title)}</b><br>
+              <small>${esc(r.description || '-')}</small><br>
+              <small>ไฟล์: ${esc(r.file_name || '-')}</small>
+            </div>
+            <a class="btn-soft small" target="_blank" href="${esc(r.file_url)}">เปิดไฟล์</a>
+          </div>
+        `).join('')
+      : '<div class="note">ยังไม่มีเอกสารประกอบการเรียน</div>';
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">โหลดเอกสารไม่สำเร็จ: ${esc(err.message)}</div>`;
+  }
+}
+
+async function openDownloadFilesPage(){
+  if(!STUDENT) return toast('กรุณาเข้าสู่ระบบก่อน');
+  showPage('pageDownloadFiles');
+  await loadDownloadFiles();
+}
+
+async function loadDownloadFiles(){
+  const box = document.getElementById('downloadFilesBox');
+  box.innerHTML = 'กำลังโหลดไฟล์...';
+
+  try {
+    const { data, error } = await sb.rpc('student_get_download_files_v2');
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const rows = data.data || [];
+
+    box.innerHTML = rows.length
+      ? rows.map(r => `
+          <div class="student-row">
+            <div>
+              <b>${esc(r.title)}</b><br>
+              <small>${esc(r.description || '-')}</small><br>
+              <small>ไฟล์: ${esc(r.file_name || '-')}</small>
+            </div>
+            <a class="btn-soft small" target="_blank" href="${esc(r.file_url)}">ดาวน์โหลด</a>
+          </div>
+        `).join('')
+      : '<div class="note">ยังไม่มีไฟล์ดาวน์โหลด</div>';
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">โหลดไฟล์ไม่สำเร็จ: ${esc(err.message)}</div>`;
+  }
+}
+
+async function teacherPrepareFilesPage(){
+  await refreshTeacherCourses();
+  await teacherLoadMaterials();
+  await teacherLoadDownloadFiles();
+}
+
+async function teacherUploadMaterial(){
+  const token = getTeacherToken();
+  const courseId = val('teacherMaterialCourse');
+  const title = val('materialTitle');
+  const description = val('materialDescription');
+  const fileInput = document.getElementById('materialFile');
+  const file = fileInput.files[0];
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+  if(!title) return toast('กรุณากรอกชื่อเอกสาร');
+  if(!file) return toast('กรุณาแนบไฟล์เอกสาร');
+
+  if(file.size > MAX_MATERIAL_FILE_SIZE) return toast('ไฟล์ใหญ่เกิน 20 MB');
+  if(!ALLOWED_MATERIAL_TYPES.includes(file.type)) return toast('ไม่รองรับชนิดไฟล์นี้');
+
+  showLoading('กำลังอัปโหลดเอกสาร', 'ระบบกำลังบันทึกเอกสารประกอบการเรียน...');
+
+  try {
+    const safeName = makeSafeFileName(file.name);
+    const path = `${courseId}/${Date.now()}_${safeName}`;
+
+    const upload = await sb.storage
+      .from('materials')
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if(upload.error) throw upload.error;
+
+    const publicUrl = sb.storage
+      .from('materials')
+      .getPublicUrl(path)
+      .data
+      .publicUrl;
+
+    const { data, error } = await sb.rpc('teacher_create_material_v2', {
+      p_token: token,
+      p_course_id: courseId,
+      p_title: title,
+      p_description: description,
+      p_file_url: publicUrl,
+      p_file_name: file.name
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'อัปโหลดไม่สำเร็จ');
+      return;
+    }
+
+    toast('อัปโหลดเอกสารสำเร็จ');
+
+    document.getElementById('materialTitle').value = '';
+    document.getElementById('materialDescription').value = '';
+    document.getElementById('materialFile').value = '';
+
+    await teacherLoadMaterials();
+
+  } catch(err) {
+    hideLoading();
+    alert('อัปโหลดเอกสารไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function teacherLoadMaterials(){
+  const token = getTeacherToken();
+  const courseId = val('teacherMaterialCourse');
+  const box = document.getElementById('teacherMaterialsBox');
+
+  if(!box) return;
+  if(!token) return;
+  if(!courseId){
+    box.innerHTML = '<div class="note">กรุณาเลือกรายวิชา</div>';
+    return;
+  }
+
+  box.innerHTML = 'กำลังโหลดเอกสาร...';
+
+  try {
+    const { data, error } = await sb.rpc('teacher_get_materials_v2', {
+      p_token: token,
+      p_course_id: courseId
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const rows = data.data || [];
+
+    box.innerHTML = rows.length
+      ? rows.map(r => `
+          <div class="student-row">
+            <div>
+              <b>${esc(r.title)}</b><br>
+              <small>${esc(r.description || '-')}</small><br>
+              <small>สถานะ: ${esc(r.status || '-')} | ${formatDateTime(r.created_at)}</small>
+            </div>
+            <a class="btn-soft small" target="_blank" href="${esc(r.file_url)}">เปิดไฟล์</a>
+          </div>
+        `).join('')
+      : '<div class="note">ยังไม่มีเอกสาร</div>';
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">โหลดเอกสารไม่สำเร็จ: ${esc(err.message)}</div>`;
+  }
+}
+
+async function teacherUploadDownloadFile(){
+  const token = getTeacherToken();
+  const title = val('downloadTitle');
+  const description = val('downloadDescription');
+  const fileInput = document.getElementById('downloadFile');
+  const file = fileInput.files[0];
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!title) return toast('กรุณากรอกชื่อไฟล์');
+  if(!file) return toast('กรุณาแนบไฟล์');
+
+  if(file.size > MAX_MATERIAL_FILE_SIZE) return toast('ไฟล์ใหญ่เกิน 20 MB');
+  if(!ALLOWED_DOWNLOAD_TYPES.includes(file.type)) return toast('รองรับเฉพาะ PDF, DOC, DOCX, JPG, PNG');
+
+  showLoading('กำลังอัปโหลดไฟล์', 'ระบบกำลังบันทึกไฟล์ดาวน์โหลด...');
+
+  try {
+    const safeName = makeSafeFileName(file.name);
+    const path = `${Date.now()}_${safeName}`;
+
+    const upload = await sb.storage
+      .from('download-files')
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if(upload.error) throw upload.error;
+
+    const publicUrl = sb.storage
+      .from('download-files')
+      .getPublicUrl(path)
+      .data
+      .publicUrl;
+
+    const { data, error } = await sb.rpc('teacher_create_download_file_v2', {
+      p_token: token,
+      p_title: title,
+      p_description: description,
+      p_file_url: publicUrl,
+      p_file_name: file.name
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'อัปโหลดไม่สำเร็จ');
+      return;
+    }
+
+    toast('อัปโหลดไฟล์ดาวน์โหลดสำเร็จ');
+
+    document.getElementById('downloadTitle').value = '';
+    document.getElementById('downloadDescription').value = '';
+    document.getElementById('downloadFile').value = '';
+
+    await teacherLoadDownloadFiles();
+
+  } catch(err) {
+    hideLoading();
+    alert('อัปโหลดไฟล์ไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function teacherLoadDownloadFiles(){
+  const token = getTeacherToken();
+  const box = document.getElementById('teacherDownloadFilesBox');
+
+  if(!box) return;
+  if(!token) return;
+
+  box.innerHTML = 'กำลังโหลดไฟล์ดาวน์โหลด...';
+
+  try {
+    const { data, error } = await sb.rpc('teacher_get_download_files_v2', {
+      p_token: token
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message)}</div>`;
+      return;
+    }
+
+    const rows = data.data || [];
+
+    box.innerHTML = rows.length
+      ? rows.map(r => `
+          <div class="student-row">
+            <div>
+              <b>${esc(r.title)}</b><br>
+              <small>${esc(r.description || '-')}</small><br>
+              <small>สถานะ: ${esc(r.status || '-')} | ${formatDateTime(r.created_at)}</small>
+            </div>
+            <a class="btn-soft small" target="_blank" href="${esc(r.file_url)}">เปิดไฟล์</a>
+          </div>
+        `).join('')
+      : '<div class="note">ยังไม่มีไฟล์ดาวน์โหลด</div>';
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">โหลดไฟล์ดาวน์โหลดไม่สำเร็จ: ${esc(err.message)}</div>`;
   }
 }
