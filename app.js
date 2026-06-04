@@ -2315,3 +2315,123 @@ async function teacherLoadDashboard(){
     assignmentBox.innerHTML = '';
   }
 }
+
+// =====================================================
+// FIX LOGIN ERROR: Cannot read properties of undefined (reading 'forEach')
+// วางท้ายไฟล์ app.js ได้เลย
+// =====================================================
+
+async function loadCourses(){
+  try {
+    const { data, error } = await sb
+      .from('courses')
+      .select('id, course_name, display_name')
+      .eq('status', 'ใช้งาน')
+      .order('created_at', { ascending:true });
+
+    if(error) throw error;
+
+    COURSES = Array.isArray(data) ? data : [];
+    return COURSES;
+
+  } catch(err) {
+    COURSES = [];
+    console.error('loadCourses error:', err);
+    throw err;
+  }
+}
+
+async function refreshTeacherCourses(){
+  await loadCourses();
+
+  const html = Array.isArray(COURSES) && COURSES.length
+    ? COURSES.map(c => `<option value="${esc(c.id)}">${esc(c.display_name || c.course_name || 'ไม่ระบุชื่อรายวิชา')}</option>`).join('')
+    : '<option value="">ยังไม่มีรายวิชา</option>';
+
+  const targetIds = [
+    'teacherDashboardCourse',
+    'teacherStudentCourse',
+    'teacherAttendanceCourse',
+    'teacherAssignmentCourse',
+    'teacherLeaveCourse',
+    'teacherScoreCourse',
+    'teacherMaterialCourse'
+  ];
+
+  targetIds.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = html;
+  });
+
+  if(typeof renderCourses === 'function'){
+    renderCourses();
+  }
+}
+
+async function teacherLogin(){
+  const username = val('teacherUser');
+  const password = val('teacherPass');
+
+  if(!username) return toast('กรุณากรอกชื่อผู้ใช้');
+  if(!password) return toast('กรุณากรอกรหัสผ่าน');
+
+  showLoading('กำลังเข้าสู่ระบบอาจารย์', 'ระบบกำลังตรวจสอบสิทธิ์...');
+
+  try {
+    const { data, error } = await sb.rpc('teacher_login_v2', {
+      p_username: username,
+      p_password: password
+    });
+
+    if(error) throw error;
+
+    if(!data || !data.ok){
+      hideLoading();
+      toast((data && data.message) || 'เข้าสู่ระบบไม่สำเร็จ');
+      return;
+    }
+
+    TEACHER = data.data || {};
+    localStorage.setItem('teacher_token', TEACHER.token || '');
+    localStorage.setItem('teacher_name', TEACHER.teacher_name || 'Admin');
+
+    const teacherInfo = document.getElementById('teacherInfo');
+    if(teacherInfo){
+      teacherInfo.innerText = 'เข้าสู่ระบบแล้ว: ' + (TEACHER.teacher_name || TEACHER.username || 'Admin');
+    }
+
+    await refreshTeacherCourses();
+
+    hideLoading();
+
+    showPage('pageTeacherPanel');
+
+    // ถ้ามี Dashboard แล้ว ให้เปิด Dashboard
+    if(document.getElementById('teacherDashboardBox')){
+      teacherTab('teacherDashboardBox');
+
+      if(typeof teacherPrepareDashboard === 'function'){
+        await teacherPrepareDashboard();
+      }
+    }
+
+  } catch(err) {
+    hideLoading();
+    alert('เข้าสู่ระบบอาจารย์ไม่สำเร็จ: ' + (err.message || err));
+  }
+}
+
+async function teacherPrepareDashboard(){
+  await refreshTeacherCourses();
+
+  const dashboardBox = document.getElementById('teacherDashboardBox');
+  const dashboardCourse = document.getElementById('teacherDashboardCourse');
+
+  if(!dashboardBox || !dashboardCourse){
+    return;
+  }
+
+  if(typeof teacherLoadDashboard === 'function'){
+    await teacherLoadDashboard();
+  }
+}
