@@ -2819,3 +2819,61 @@ async function refreshTeacherCourses(){
 async function teacherPrepareExportPage(){
   await refreshTeacherCourses();
 }
+
+// =====================================================
+// UI FIX - Collapsible Teacher Sidebar
+// เพิ่มปุ่ม ☰ เพื่อซ่อน/แสดง Sidebar
+// =====================================================
+
+function ensureTeacherSidebarToggle(){
+  const panel = document.getElementById('pageTeacherPanel');
+  if(!panel) return;
+
+  if(document.getElementById('teacherSidebarToggle')) return;
+
+  const btn = document.createElement('button');
+  btn.id = 'teacherSidebarToggle';
+  btn.className = 'teacher-sidebar-toggle';
+  btn.innerHTML = '☰ เมนู';
+  btn.onclick = toggleTeacherSidebar;
+
+  panel.prepend(btn);
+}
+
+function toggleTeacherSidebar(){
+  document.body.classList.toggle('teacher-sidebar-hidden');
+
+  const btn = document.getElementById('teacherSidebarToggle');
+  if(btn){
+    btn.innerHTML = document.body.classList.contains('teacher-sidebar-hidden')
+      ? '☰ เมนู'
+      : '✕ ปิดเมนู';
+  }
+}
+
+// เรียกใช้เมื่อเปิดหน้าอาจารย์
+const oldTeacherTabForSidebar = teacherTab;
+
+teacherTab = function(id){
+  ensureTeacherSidebarToggle();
+
+  document.querySelectorAll('.teacher-box').forEach(x => {
+    x.classList.remove('active');
+  });
+
+  const target = document.getElementById(id);
+  if(target){
+    target.classList.add('active');
+  }
+
+  document.querySelectorAll('#pageTeacherPanel .teacher-tabs button').forEach(btn => {
+    btn.classList.remove('active-tab');
+
+    const click = btn.getAttribute('onclick') || '';
+    if(click.includes(id)){
+      btn.classList.add('active-tab');
+    }
+  });
+
+  window.scrollTo({ top:0, behavior:'smooth' });
+};
