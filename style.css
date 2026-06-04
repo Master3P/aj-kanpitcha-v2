@@ -1450,3 +1450,98 @@ body.teacher-sidebar-hidden #pageTeacherPanel .teacher-box{
     display:flex !important;
   }
 }
+
+/* =====================================================
+   UI REVAMP PHASE 3
+   Score + AI Review Page
+===================================================== */
+
+.score-top-zone{
+  display:grid;
+  grid-template-columns:1.2fr 1.2fr 260px;
+  gap:18px;
+  align-items:end;
+  background:linear-gradient(135deg,#fff,#fbf8ff);
+  border:1px solid rgba(124,58,237,.14);
+  border-radius:30px;
+  padding:26px;
+  box-shadow:0 12px 30px rgba(63,0,117,.05);
+}
+
+.score-action-grid{
+  display:grid;
+  grid-template-columns:minmax(320px, .9fr) minmax(420px, 1.3fr);
+  gap:28px;
+  align-items:start;
+}
+
+.ai-zone{
+  background:
+    radial-gradient(circle at top right, rgba(124,58,237,.10), transparent 34%),
+    linear-gradient(135deg,#ffffff,#faf7ff) !important;
+  border-color:rgba(124,58,237,.22) !important;
+}
+
+.selected-student-hint{
+  margin-top:16px;
+  padding:16px 18px;
+  border-radius:20px;
+  background:var(--aj-purple-50);
+  color:var(--aj-purple-900);
+  font-weight:800;
+  border:1px solid var(--aj-line);
+}
+
+#scoreStudentResults{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:flex-start;
+}
+
+#scoreStudentResults .btn-soft.small{
+  padding:10px 14px !important;
+  border-radius:999px !important;
+  font-size:14px;
+}
+
+.score-report-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+#teacherScoreBox .teacher-zone{
+  min-height:160px;
+}
+
+#teacherScoreBox textarea{
+  resize:vertical;
+}
+
+#teacherScoreReportBox{
+  margin-top:18px;
+}
+
+/* ทำให้ช่องผลตรวจ AI อ่านง่ายขึ้น */
+#aiCommentBox{
+  line-height:1.65;
+  font-size:15px;
+  background:#fff !important;
+}
+
+/* Responsive */
+@media(max-width:1200px){
+  .score-top-zone{
+    grid-template-columns:1fr;
+  }
+
+  .score-action-grid{
+    grid-template-columns:1fr;
+  }
+
+  .score-report-actions{
+    justify-content:flex-start;
+  }
+}
