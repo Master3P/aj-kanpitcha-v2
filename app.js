@@ -388,6 +388,8 @@ async function teacherLogin(){
     await refreshTeacherCourses();
 
     showPage('pageTeacherPanel');
+    teacherTab('teacherDashboardBox');
+    await teacherPrepareDashboard();
 
   } catch(err) {
     hideLoading();
@@ -2049,6 +2051,16 @@ async function refreshTeacherCourses(){
     : '<option value="">ยังไม่มีรายวิชา</option>';
 
   [
+    'teacherDashboardCourse',
+    'teacherStudentCourse',
+    'teacherAttendanceCourse',
+    'teacherAssignmentCourse',
+    'teacherLeaveCourse',
+    'teacherScoreCourse',
+    'teacherMaterialCourse'
+  ]
+    
+  [
     'teacherStudentCourse',
     'teacherAttendanceCourse',
     'teacherAssignmentCourse',
@@ -2170,5 +2182,136 @@ async function teacherConfirmAIReview(){
   } catch(err) {
     hideLoading();
     alert('ยืนยันคะแนนไม่สำเร็จ: ' + err.message);
+  }
+}
+
+// =====================================================
+// PHASE 11 - Teacher Dashboard / System Health
+// =====================================================
+
+async function teacherPrepareDashboard(){
+  await refreshTeacherCourses();
+  await teacherLoadDashboard();
+}
+
+async function teacherLoadDashboard(){
+  const token = getTeacherToken();
+  const courseId = val('teacherDashboardCourse');
+  const summaryBox = document.getElementById('teacherDashboardSummary');
+  const assignmentBox = document.getElementById('teacherDashboardAssignments');
+
+  if(!summaryBox || !assignmentBox) return;
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+
+  if(!courseId){
+    summaryBox.innerHTML = '<div class="note">กรุณาเลือกรายวิชา</div>';
+    assignmentBox.innerHTML = '';
+    return;
+  }
+
+  summaryBox.innerHTML = 'กำลังโหลด Dashboard...';
+  assignmentBox.innerHTML = '';
+
+  try {
+    const { data, error } = await sb.rpc('teacher_get_dashboard_v2', {
+      p_token: token,
+      p_course_id: courseId
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      summaryBox.innerHTML = `<div class="note">${esc(data.message || 'โหลด Dashboard ไม่สำเร็จ')}</div>`;
+      return;
+    }
+
+    const d = data.data || {};
+    const latest = d.latest_attendance;
+
+    summaryBox.innerHTML = `
+      <div class="dashboard-grid">
+        <div class="dashboard-card dashboard-good">
+          <b>นักศึกษาทั้งหมด</b>
+          <div class="dashboard-num">${esc(d.students || 0)}</div>
+          <small>คน</small>
+        </div>
+
+        <div class="dashboard-card">
+          <b>ชิ้นงานที่เปิดใช้</b>
+          <div class="dashboard-num">${esc(d.assignments || 0)}</div>
+          <small>ชิ้นงาน</small>
+        </div>
+
+        <div class="dashboard-card ${Number(d.submission_missing || 0) > 0 ? 'dashboard-warn' : 'dashboard-good'}">
+          <b>รายการงานที่ยังไม่ส่ง</b>
+          <div class="dashboard-num">${esc(d.submission_missing || 0)}</div>
+          <small>รวมทุกชิ้นงาน</small>
+        </div>
+
+        <div class="dashboard-card ${Number(d.pending_leaves || 0) > 0 ? 'dashboard-warn' : 'dashboard-good'}">
+          <b>ใบลารอรับทราบ</b>
+          <div class="dashboard-num">${esc(d.pending_leaves || 0)}</div>
+          <small>รายการ</small>
+        </div>
+
+        <div class="dashboard-card ${Number(d.pending_scores || 0) > 0 ? 'dashboard-warn' : 'dashboard-good'}">
+          <b>คะแนนรอซิงค์</b>
+          <div class="dashboard-num">${esc(d.pending_scores || 0)}</div>
+          <small>รายการ</small>
+        </div>
+
+        <div class="dashboard-card ${Number(d.pending_ai || 0) > 0 ? 'dashboard-warn' : 'dashboard-good'}">
+          <b>AI รอยืนยัน</b>
+          <div class="dashboard-num">${esc(d.pending_ai || 0)}</div>
+          <small>รายการ</small>
+        </div>
+
+        <div class="dashboard-card">
+          <b>เช็คชื่อล่าสุด</b>
+          <div class="dashboard-num">${latest ? esc(latest.checked_count || 0) : '-'}</div>
+          <small>
+            ${latest
+              ? `ครั้งที่ ${esc(latest.session_no || '-')} | ${esc(latest.status || '-')}`
+              : 'ยังไม่มีรอบเช็คชื่อ'}
+          </small>
+        </div>
+      </div>
+    `;
+
+    const rows = d.assignment_rows || [];
+
+    assignmentBox.innerHTML = rows.length
+      ? `
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ชิ้นงาน</th>
+                <th>คะแนนเต็ม</th>
+                <th>ส่งแล้ว</th>
+                <th>ยังไม่ส่ง</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r => `
+                <tr>
+                  <td>${esc(r.title || '-')}</td>
+                  <td>${esc(r.max_score || '-')}</td>
+                  <td><span class="check">${esc(r.submitted_count || 0)}</span></td>
+                  <td>${Number(r.missing_count || 0) > 0
+                    ? `<span class="miss">${esc(r.missing_count)}</span>`
+                    : '<span class="check">0</span>'}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `
+      : '<div class="note">ยังไม่มีชิ้นงานสำหรับรายวิชานี้</div>';
+
+  } catch(err) {
+    summaryBox.innerHTML = `<div class="note">โหลด Dashboard ไม่สำเร็จ: ${esc(err.message)}</div>`;
+    assignmentBox.innerHTML = '';
   }
 }
