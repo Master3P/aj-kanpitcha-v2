@@ -2730,3 +2730,31 @@ function getSelectedText(selectId){
   if(!el || !el.options || el.selectedIndex < 0) return '';
   return el.options[el.selectedIndex].text || '';
 }
+
+// =====================================================
+// UI REVAMP PHASE 1
+// Active Sidebar Button + Safe Teacher Tab
+// วางท้ายไฟล์ app.js ได้เลย
+// =====================================================
+
+function teacherTab(id){
+  document.querySelectorAll('.teacher-box').forEach(x => {
+    x.classList.remove('active');
+  });
+
+  const target = document.getElementById(id);
+  if(target){
+    target.classList.add('active');
+  }
+
+  document.querySelectorAll('#pageTeacherPanel .teacher-tabs button').forEach(btn => {
+    btn.classList.remove('active-tab');
+
+    const click = btn.getAttribute('onclick') || '';
+    if(click.includes(id)){
+      btn.classList.add('active-tab');
+    }
+  });
+
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
