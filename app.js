@@ -2073,3 +2073,102 @@ async function teacherPrepareFilesPage(){
 
   await teacherLoadDownloadFiles();
 }
+
+// =====================================================
+// PHASE 10 - AI Review
+// =====================================================
+
+async function teacherRunAIReview(){
+  const token = getTeacherToken();
+  const courseId = val('teacherScoreCourse');
+  const itemColumn = val('teacherScoreAssignment');
+  const studentId = val('selectedScoreStudentId');
+  const rubric = val('aiRubric');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+  if(!itemColumn) return toast('กรุณาเลือกชิ้นงาน');
+  if(!studentId) return toast('กรุณาเลือกนักศึกษา');
+
+  if(!BRIDGE_URL || BRIDGE_URL.includes('ใส่')){
+    return toast('ยังไม่ได้ตั้งค่า BRIDGE_URL ใน config.js');
+  }
+
+  showLoading('AI กำลังตรวจงาน', 'ระบบกำลังอ่านไฟล์งานและประเมินคะแนน...');
+
+  try {
+    const res = await fetch(BRIDGE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify({
+        action: 'runAIReview',
+        courseId: courseId,
+        itemColumn: itemColumn,
+        studentId: studentId,
+        rubric: rubric
+      })
+    });
+
+    const data = await res.json();
+
+    hideLoading();
+
+    if(!data.ok){
+      alert(data.message || 'AI ตรวจงานไม่สำเร็จ');
+      return;
+    }
+
+    const d = data.data || {};
+
+    document.getElementById('aiReviewId').value = d.reviewId || '';
+    document.getElementById('aiFinalScore').value = d.aiScore ?? '';
+    document.getElementById('aiCommentBox').value = d.aiComment || '';
+
+    toast('AI ตรวจงานสำเร็จ');
+
+  } catch(err) {
+    hideLoading();
+    alert('AI ตรวจงานไม่สำเร็จ: ' + err.message);
+  }
+}
+
+async function teacherConfirmAIReview(){
+  const token = getTeacherToken();
+  const reviewId = val('aiReviewId');
+  const finalScore = Number(val('aiFinalScore'));
+  const comment = val('aiCommentBox');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!reviewId) return toast('ยังไม่มีผลตรวจ AI ให้ยืนยัน');
+  if(Number.isNaN(finalScore)) return toast('กรุณากรอกคะแนนที่ต้องการยืนยัน');
+
+  showLoading('กำลังยืนยันคะแนน', 'ระบบกำลังบันทึกคะแนนจากผลตรวจ AI...');
+
+  try {
+    const { data, error } = await sb.rpc('teacher_confirm_ai_review_v2', {
+      p_token: token,
+      p_ai_review_id: reviewId,
+      p_final_score: finalScore,
+      p_teacher_comment: comment
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'ยืนยันคะแนนไม่สำเร็จ');
+      return;
+    }
+
+    toast('ยืนยันคะแนนสำเร็จ');
+
+    await teacherLoadScoreReport();
+
+  } catch(err) {
+    hideLoading();
+    alert('ยืนยันคะแนนไม่สำเร็จ: ' + err.message);
+  }
+}
