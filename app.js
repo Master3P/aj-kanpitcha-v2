@@ -3553,3 +3553,321 @@ function addPrintButtonsToReports(){
     'leaveHistoryBox'
   ].forEach(id => ensurePrintButton(id));
 }
+
+// =====================================================
+// PHASE 15 - Learning Rules + Student Logout
+// =====================================================
+
+let CURRENT_RULES = null;
+let RULES_FORCE_ACCEPT = false;
+
+function studentLogout(){
+  try {
+    localStorage.removeItem('student');
+    localStorage.removeItem('student_info');
+    localStorage.removeItem('student_token');
+    localStorage.removeItem('studentId');
+    localStorage.removeItem('courseId');
+  } catch(e) {}
+
+  STUDENT = null;
+
+  toast('ออกจากระบบแล้ว');
+  showPage('pageStudentLogin');
+}
+
+async function openLearningRulesPage(forceAccept){
+  if(!STUDENT) return toast('กรุณาเข้าสู่ระบบก่อน');
+
+  RULES_FORCE_ACCEPT = !!forceAccept;
+
+  showPage('pageLearningRules');
+
+  const imageBox = document.getElementById('rulesImageBox');
+  const textBox = document.getElementById('rulesTextBox');
+
+  if(imageBox) imageBox.innerHTML = '';
+  if(textBox) textBox.innerHTML = 'กำลังโหลดกติกา...';
+
+  try {
+    const { data, error } = await sb.rpc('student_get_learning_rules_v2', {
+      p_course_id: STUDENT.course_id,
+      p_student_id: STUDENT.student_id
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      if(textBox) textBox.innerHTML = `<div class="student-empty">${esc(data.message)}</div>`;
+      return;
+    }
+
+    CURRENT_RULES = data.data || {};
+    renderLearningRules(CURRENT_RULES, RULES_FORCE_ACCEPT);
+
+  } catch(err) {
+    if(textBox){
+      textBox.innerHTML = `<div class="student-empty">โหลดกติกาไม่สำเร็จ: ${esc(normalizeErrorMessage(err))}</div>`;
+    }
+  }
+}
+
+function renderLearningRules(rule, forceAccept){
+  const imageBox = document.getElementById('rulesImageBox');
+  const textBox = document.getElementById('rulesTextBox');
+  const acceptBtn = document.getElementById('rulesAcceptBtn');
+  const closeBtn = document.getElementById('rulesCloseBtn');
+  const closeTopBtn = document.getElementById('rulesCloseTopBtn');
+
+  if(imageBox){
+    imageBox.innerHTML = rule.image_url
+      ? `<img src="${esc(rule.image_url)}" alt="กติกาการเรียน" style="max-width:100%;border-radius:24px;border:1px solid var(--aj-line);box-shadow:0 12px 30px rgba(63,0,117,.08);">`
+      : '';
+  }
+
+  if(textBox){
+    textBox.innerHTML = `
+      <div style="white-space:pre-wrap;line-height:1.8;font-size:17px;">
+        ${esc(rule.rule_text || 'ยังไม่ได้ตั้งค่ากติกาการเรียน')}
+      </div>
+    `;
+  }
+
+  const accepted = !!rule.accepted;
+
+  if(forceAccept && !accepted){
+    if(acceptBtn) acceptBtn.style.display = '';
+    if(closeBtn) closeBtn.style.display = 'none';
+    if(closeTopBtn) closeTopBtn.style.display = 'none';
+  }else{
+    if(acceptBtn) acceptBtn.style.display = 'none';
+    if(closeBtn) closeBtn.style.display = '';
+    if(closeTopBtn) closeTopBtn.style.display = '';
+  }
+}
+
+async function acceptLearningRules(){
+  if(!STUDENT) return toast('กรุณาเข้าสู่ระบบก่อน');
+
+  showLoading('กำลังบันทึกการรับทราบ', 'ระบบกำลังบันทึกว่าท่านรับทราบกติกาแล้ว...');
+
+  try {
+    const { data, error } = await sb.rpc('student_accept_learning_rules_v2', {
+      p_course_id: STUDENT.course_id,
+      p_student_id: STUDENT.student_id
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'บันทึกไม่สำเร็จ');
+      return;
+    }
+
+    toast('รับทราบกติกาเรียบร้อยแล้ว');
+
+    if(CURRENT_RULES) CURRENT_RULES.accepted = true;
+
+    showPage('pageDashboard');
+
+  } catch(err) {
+    hideLoading();
+    alert('บันทึกการรับทราบไม่สำเร็จ: ' + normalizeErrorMessage(err));
+  }
+}
+
+function closeLearningRules(){
+  showPage('pageDashboard');
+}
+
+// =====================================================
+// PHASE 15 - Override studentLogin to show learning rules
+// =====================================================
+
+async function studentLogin(){
+  const studentId = val('loginStudentId');
+  const fullName = val('loginFullName');
+
+  if(!studentId) return toast('กรุณากรอกรหัสนักศึกษา');
+  if(!fullName) return toast('กรุณากรอกชื่อ - นามสกุล');
+
+  showLoading('กำลังค้นหานักศึกษา', 'ระบบกำลังค้นหารหัสหรือชื่อ...');
+
+  try {
+    const { data, error } = await sb.rpc('student_login_v2', {
+      p_student_id: studentId,
+      p_full_name: fullName
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'เข้าสู่ระบบไม่สำเร็จ');
+      return;
+    }
+
+    STUDENT = data.data;
+
+    try {
+      localStorage.setItem('student', JSON.stringify(STUDENT));
+    } catch(e) {}
+
+    const info = document.getElementById('studentInfo');
+    if(info){
+      info.innerText = `${STUDENT.course_name || STUDENT.display_name || ''} | ${STUDENT.student_id} ${STUDENT.full_name}`;
+    }
+
+    await showRulesAfterStudentLogin();
+
+  } catch(err) {
+    hideLoading();
+    alert('เข้าสู่ระบบนักศึกษาไม่สำเร็จ: ' + normalizeErrorMessage(err));
+  }
+}
+
+async function showRulesAfterStudentLogin(){
+  if(!STUDENT){
+    showPage('pageDashboard');
+    return;
+  }
+
+  try {
+    const { data, error } = await sb.rpc('student_get_learning_rules_v2', {
+      p_course_id: STUDENT.course_id,
+      p_student_id: STUDENT.student_id
+    });
+
+    if(error) throw error;
+
+    const rule = data.data || {};
+    CURRENT_RULES = rule;
+
+    if(rule.accepted){
+      // เคยยอมรับแล้ว: ให้เห็นกติกาเหมือนเดิม แต่มีปุ่มปิดแทน
+      showPage('pageLearningRules');
+      renderLearningRules(rule, false);
+    }else{
+      // ครั้งแรก: ต้องกดยอมรับก่อนเข้าเมนู
+      showPage('pageLearningRules');
+      renderLearningRules(rule, true);
+    }
+
+  } catch(err) {
+    // ถ้าโหลดกติกาพัง ไม่บล็อกการเข้าใช้งาน
+    console.error('showRulesAfterStudentLogin error:', err);
+    showPage('pageDashboard');
+  }
+}
+
+// =====================================================
+// PHASE 15 - Teacher Learning Rules
+// =====================================================
+
+async function teacherLoadLearningRules(){
+  const textEl = document.getElementById('teacherRuleText');
+  const imgBox = document.getElementById('teacherRulePreviewImage');
+  const previewText = document.getElementById('teacherRulePreviewText');
+
+  if(textEl) textEl.value = '';
+  if(imgBox) imgBox.innerHTML = '';
+  if(previewText) previewText.innerHTML = 'กำลังโหลดกติกา...';
+
+  try {
+    const { data, error } = await sb.rpc('student_get_learning_rules_v2', {
+      p_course_id: null,
+      p_student_id: ''
+    });
+
+    if(error) throw error;
+
+    const rule = data.data || {};
+
+    if(textEl) textEl.value = rule.rule_text || '';
+
+    if(imgBox){
+      imgBox.innerHTML = rule.image_url
+        ? `<img src="${esc(rule.image_url)}" style="max-width:100%;border-radius:22px;border:1px solid var(--aj-line);">`
+        : '<div class="student-empty">ยังไม่มีภาพกติกา</div>';
+    }
+
+    if(previewText){
+      previewText.innerHTML = `<div style="white-space:pre-wrap;line-height:1.8;">${esc(rule.rule_text || '-')}</div>`;
+    }
+
+  } catch(err) {
+    if(previewText){
+      previewText.innerHTML = `<div class="student-empty">โหลดกติกาไม่สำเร็จ: ${esc(normalizeErrorMessage(err))}</div>`;
+    }
+  }
+}
+
+async function teacherSaveLearningRules(){
+  const token = getTeacherToken();
+  const ruleText = val('teacherRuleText');
+  const fileInput = document.getElementById('teacherRuleImage');
+  const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!ruleText) return toast('กรุณากรอกข้อความกติกา');
+
+  showLoading('กำลังบันทึกกติกา', 'ระบบกำลังบันทึกข้อความและรูปภาพกติกา...');
+
+  try {
+    let imageUrl = '';
+    let imageName = '';
+
+    if(file){
+      if(file.size > 5 * 1024 * 1024) throw new Error('ไฟล์ภาพใหญ่เกิน 5 MB');
+      if(!['image/jpeg','image/png'].includes(file.type)) throw new Error('รองรับเฉพาะ JPG หรือ PNG');
+
+      const safeName = makeSafeFileName(file.name);
+      const path = `rules_${Date.now()}_${safeName}`;
+
+      const upload = await sb.storage
+        .from('rules')
+        .upload(path, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if(upload.error) throw upload.error;
+
+      imageUrl = sb.storage
+        .from('rules')
+        .getPublicUrl(path)
+        .data
+        .publicUrl;
+
+      imageName = file.name;
+    }
+
+    const { data, error } = await sb.rpc('teacher_save_learning_rules_v2', {
+      p_token: token,
+      p_rule_text: ruleText,
+      p_image_url: imageUrl,
+      p_image_name: imageName
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'บันทึกกติกาไม่สำเร็จ');
+      return;
+    }
+
+    toast('บันทึกกติกาการเรียนสำเร็จ');
+    if(fileInput) fileInput.value = '';
+
+    await teacherLoadLearningRules();
+
+  } catch(err) {
+    hideLoading();
+    alert('บันทึกกติกาไม่สำเร็จ: ' + normalizeErrorMessage(err));
+  }
+}
