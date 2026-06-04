@@ -388,6 +388,7 @@
       <button class="btn-main" onclick="teacherTab('teacherScoreBox');teacherPrepareScorePage()">คะแนน</button>
       <button class="btn-main" onclick="teacherTab('teacherFilesBox');teacherPrepareFilesPage()">เอกสาร</button>
       <button class="btn-main" onclick="teacherTab('teacherSettingsBox');teacherLoadSystemHealth()">ตั้งค่า</button>
+      <button class="btn-main" onclick="teacherTab('teacherExportBox');teacherPrepareExportPage()">Export</button>
     </div>
 
     <div id="teacherDashboardBox" class="teacher-box active">
@@ -655,6 +656,38 @@
     <button class="btn-soft full" onclick="teacherLoadSystemHealth()">ตรวจสอบระบบ</button>
 
     <div id="systemHealthBox" class="mt-box"></div>
+  </div>
+</div>
+
+    <div id="teacherExportBox" class="teacher-box">
+  <div class="card">
+    <h2>Export / Backup ข้อมูล</h2>
+    <p class="note">ใช้สำหรับส่งออกข้อมูลรายวิชาเป็นไฟล์ CSV เพื่อสำรองข้อมูลหรือเปิดใน Excel/Google Sheet</p>
+
+    <label>เลือกรายวิชา</label>
+    <select id="teacherExportCourse"></select>
+
+    <label>ประเภทข้อมูลที่ต้องการส่งออก</label>
+    <select id="teacherExportType">
+      <option value="students">รายชื่อนักศึกษา</option>
+      <option value="submissions">รายงานการส่งงาน</option>
+      <option value="scores">คะแนน</option>
+      <option value="leave">ใบลา</option>
+      <option value="special_scores">คะแนนพิเศษ</option>
+      <option value="attendance">ประวัติเช็คชื่อ</option>
+    </select>
+
+    <button class="btn-main full" onclick="teacherExportCSV()">ดาวน์โหลด CSV</button>
+
+    <hr>
+
+    <h3>คำแนะนำ</h3>
+    <div class="note">
+      ไฟล์ CSV ที่ดาวน์โหลดสามารถเปิดด้วย Excel หรืออัปโหลดเข้า Google Sheet ได้โดยตรง
+      หากภาษาไทยเพี้ยน ให้เปิดผ่าน Google Sheet ก่อน หรือเลือกนำเข้าแบบ UTF-8
+    </div>
+
+    <div id="teacherExportBoxResult" class="mt-box"></div>
   </div>
 </div>
     
