@@ -2877,3 +2877,30 @@ teacherTab = function(id){
 
   window.scrollTo({ top:0, behavior:'smooth' });
 };
+
+// =====================================================
+// UI REVAMP PHASE 3 - Selected student UX
+// =====================================================
+
+function selectScoreStudent(studentId, fullName){
+  const idEl = document.getElementById('selectedScoreStudentId');
+  const nameEl = document.getElementById('selectedScoreStudent');
+  const searchEl = document.getElementById('scoreStudentSearch');
+  const resultsEl = document.getElementById('scoreStudentResults');
+
+  if(idEl) idEl.value = studentId;
+  if(nameEl) nameEl.value = `${studentId} ${fullName}`;
+
+  if(searchEl) searchEl.value = '';
+  if(resultsEl){
+    resultsEl.innerHTML = `
+      <div class="student-row" style="width:100%;">
+        <div>
+          <b>${esc(studentId)} ${esc(fullName)}</b><br>
+          <small>เลือกนักศึกษาคนนี้แล้ว สามารถกรอกคะแนนหรือใช้ AI ตรวจงานได้</small>
+        </div>
+        <span class="status-pill">เลือกแล้ว</span>
+      </div>
+    `;
+  }
+}
