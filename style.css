@@ -1118,3 +1118,216 @@ tr:hover td{
     padding:22px !important;
   }
 }
+
+/* =====================================================
+   UI REVAMP PHASE 2
+   Page-specific zone layout
+   ทำให้แต่ละหน้าแยกโซนชัดเจนขึ้น
+===================================================== */
+
+/* โซนฟอร์มหลักในหน้าอาจารย์ */
+#pageTeacherPanel .teacher-box .card{
+  display:block;
+}
+
+/* ให้กล่องภายในหน้าอาจารย์ดูแยกเป็น section */
+#pageTeacherPanel .teacher-box .card > h2:first-child{
+  margin-bottom:8px;
+}
+
+#pageTeacherPanel .teacher-box .card > p,
+#pageTeacherPanel .teacher-box .card > .note{
+  margin-bottom:22px;
+}
+
+/* input ที่อยู่ต่อกันให้หายอึดอัด */
+#pageTeacherPanel .teacher-box input,
+#pageTeacherPanel .teacher-box select,
+#pageTeacherPanel .teacher-box textarea{
+  margin-bottom:14px;
+}
+
+/* ปรับปุ่มในฟอร์มให้ห่างสวยขึ้น */
+#pageTeacherPanel .teacher-box .btn-main.full,
+#pageTeacherPanel .teacher-box .btn-soft.full{
+  margin-top:10px;
+  margin-bottom:8px;
+}
+
+/* แยกโซนแบบ grid ใช้กับบางหน้าที่มีฟอร์ม + รายงาน */
+.teacher-two-col{
+  display:grid;
+  grid-template-columns:minmax(320px, 520px) minmax(0, 1fr);
+  gap:28px;
+  align-items:start;
+}
+
+.teacher-zone{
+  background:#fff;
+  border:1px solid rgba(124,58,237,.13);
+  border-radius:30px;
+  padding:28px;
+  box-shadow:0 12px 30px rgba(63,0,117,.06);
+}
+
+.teacher-zone.soft{
+  background:linear-gradient(135deg,#fff,#fbf8ff);
+}
+
+.teacher-zone.purple{
+  background:linear-gradient(160deg,#3b006e,#5b0db7);
+  color:#fff;
+}
+
+.teacher-zone.purple h2,
+.teacher-zone.purple h3,
+.teacher-zone.purple label{
+  color:#fff !important;
+}
+
+.teacher-zone.purple input,
+.teacher-zone.purple select,
+.teacher-zone.purple textarea{
+  background:rgba(255,255,255,.13) !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.26) !important;
+}
+
+.teacher-zone.purple input::placeholder,
+.teacher-zone.purple textarea::placeholder{
+  color:rgba(255,255,255,.68) !important;
+}
+
+.teacher-zone.purple .btn-main{
+  background:linear-gradient(135deg,#ffd400,#ff9f1c) !important;
+  color:#2b004f !important;
+}
+
+.teacher-zone.purple .btn-soft{
+  background:#fff !important;
+  color:#3b006e !important;
+}
+
+/* section title */
+.zone-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:20px;
+}
+
+.zone-title h2,
+.zone-title h3{
+  margin:0 !important;
+}
+
+.zone-subtitle{
+  color:var(--aj-muted);
+  margin-top:-8px;
+  margin-bottom:22px;
+}
+
+/* Status panel */
+.status-panel{
+  border:1px solid var(--aj-line);
+  border-radius:26px;
+  padding:24px;
+  background:#fff;
+}
+
+.status-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 14px;
+  border-radius:999px;
+  font-weight:900;
+  background:var(--aj-purple-50);
+  color:var(--aj-purple-900);
+  margin-bottom:14px;
+}
+
+.big-number{
+  font-size:46px;
+  line-height:1;
+  font-weight:900;
+  color:var(--aj-purple-900);
+}
+
+/* ทำให้กล่องรายการดูเหมือน card list */
+.student-row{
+  border:1px solid var(--aj-line);
+  border-radius:22px;
+  padding:18px 20px;
+  margin-bottom:12px;
+  background:#fff;
+  box-shadow:0 8px 20px rgba(63,0,117,.04);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+}
+
+.student-row:hover{
+  border-color:rgba(124,58,237,.32);
+  box-shadow:0 12px 26px rgba(63,0,117,.08);
+}
+
+.student-row b{
+  color:var(--aj-purple-900);
+}
+
+.student-row small{
+  color:var(--aj-muted);
+}
+
+/* ปรับหน้าเอกสาร/ไฟล์ให้ form เป็นแถบบน */
+.file-form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:16px;
+  align-items:end;
+}
+
+.file-form-grid .wide{
+  grid-column:1 / -1;
+}
+
+/* ปรับ table ให้ดูโล่ง */
+.table-wrap{
+  margin-top:14px;
+  background:#fff;
+}
+
+.table-wrap table th{
+  white-space:nowrap;
+}
+
+.table-wrap table td{
+  vertical-align:top;
+}
+
+/* ช่องค้นหาในรายงาน */
+.filter-bar{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr auto;
+  gap:14px;
+  align-items:end;
+  margin-bottom:18px;
+}
+
+/* Responsive */
+@media(max-width:1100px){
+  .teacher-two-col{
+    grid-template-columns:1fr;
+  }
+
+  .file-form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .filter-bar{
+    grid-template-columns:1fr;
+  }
+}
