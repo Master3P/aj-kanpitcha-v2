@@ -2029,3 +2029,41 @@ async function teacherLoadDownloadFiles(){
     box.innerHTML = `<div class="note">โหลดไฟล์ดาวน์โหลดไม่สำเร็จ: ${esc(err.message)}</div>`;
   }
 }
+
+// =====================================================
+// FIX PHASE 9 - Ensure teacher material course dropdown works
+// วางท้ายไฟล์ app.js ได้เลย
+// =====================================================
+
+async function refreshTeacherCourses(){
+  await loadCourses();
+
+  const html = COURSES.length
+    ? COURSES.map(c => `<option value="${esc(c.id)}">${esc(c.display_name || c.course_name)}</option>`).join('')
+    : '<option value="">ยังไม่มีรายวิชา</option>';
+
+  [
+    'teacherStudentCourse',
+    'teacherAttendanceCourse',
+    'teacherAssignmentCourse',
+    'teacherLeaveCourse',
+    'teacherScoreCourse',
+    'teacherMaterialCourse'
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = html;
+  });
+
+  renderCourses();
+}
+
+async function teacherPrepareFilesPage(){
+  await refreshTeacherCourses();
+
+  const materialCourse = document.getElementById('teacherMaterialCourse');
+  if(materialCourse && materialCourse.value){
+    await teacherLoadMaterials();
+  }
+
+  await teacherLoadDownloadFiles();
+}
