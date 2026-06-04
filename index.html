@@ -379,6 +379,7 @@
     </div>
 
     <div class="teacher-tabs">
+      <button class="btn-main" onclick="teacherTab('teacherDashboardBox');teacherPrepareDashboard()">Dashboard</button>
       <button class="btn-main" onclick="teacherTab('teacherCourseBox')">รายวิชา</button>
       <button class="btn-main" onclick="teacherTab('teacherStudentBox')">นักศึกษา</button>
       <button class="btn-main" onclick="teacherTab('teacherAttendanceBox')">เช็คชื่อ</button>
@@ -388,7 +389,29 @@
       <button class="btn-main" onclick="teacherTab('teacherFilesBox');teacherPrepareFilesPage()">เอกสาร</button>
     </div>
 
-    <div id="teacherCourseBox" class="teacher-box active">
+    <div id="teacherDashboardBox" class="teacher-box active">
+  <div class="card">
+    <div class="head">
+      <div>
+        <h2>Dashboard ตรวจสุขภาพระบบ</h2>
+        <p>สรุปรายการที่ต้องติดตามในรายวิชา</p>
+      </div>
+      <button class="btn-soft" onclick="teacherPrepareDashboard()">รีเฟรช</button>
+    </div>
+
+    <label>เลือกรายวิชา</label>
+    <select id="teacherDashboardCourse" onchange="teacherLoadDashboard()"></select>
+
+    <div id="teacherDashboardSummary" class="mt-box"></div>
+
+    <hr>
+
+    <h3>สถานะการส่งงานแยกตามชิ้นงาน</h3>
+    <div id="teacherDashboardAssignments" class="mt-box"></div>
+  </div>
+</div>
+    
+    <div id="teacherCourseBox" class="teacher-box">
       <div class="card">
         <h2>เพิ่มรายวิชา</h2>
 
