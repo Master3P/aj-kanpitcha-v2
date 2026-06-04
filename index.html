@@ -541,6 +541,25 @@
 
     <hr>
 
+    <h3>AI ตรวจงานรายคน</h3>
+
+    <label>เกณฑ์ตรวจเพิ่มเติม</label>
+    <textarea id="aiRubric" rows="5" placeholder="เช่น ตรวจความครบถ้วน ความเข้าใจ การวิเคราะห์ การจัดรูปแบบ และการอ้างอิง"></textarea>
+
+    <button class="btn-main full" onclick="teacherRunAIReview()">AI ตรวจงานนักศึกษาที่เลือก</button>
+
+    <label>คะแนนที่ AI เสนอ / คะแนนที่อาจารย์ยืนยัน</label>
+    <input id="aiFinalScore" type="number" placeholder="คะแนนหลังตรวจ">
+
+    <label>คอมเมนต์จาก AI / อาจารย์แก้ไขได้</label>
+    <textarea id="aiCommentBox" rows="8" placeholder="ผลตรวจจาก AI จะแสดงที่นี่ และอาจารย์แก้ไขได้"></textarea>
+
+    <input id="aiReviewId" type="hidden">
+
+    <button class="btn-soft full" onclick="teacherConfirmAIReview()">ยืนยันคะแนนจาก AI</button>
+    
+    <hr>
+
     <h3>รายงานคะแนน</h3>
 
     <button class="btn-soft full" onclick="teacherLoadScoreReport()">โหลดรายงานคะแนน</button>
