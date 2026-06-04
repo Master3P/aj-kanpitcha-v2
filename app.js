@@ -4333,3 +4333,54 @@ teacherTab = function(id){
     activeBox.scrollTo({ top:0, behavior:'smooth' });
   }
 };
+
+// =====================================================
+// FIX - Clear learning rules image
+// ลบรูปภาพกติกาการเรียนเดิมออกจากระบบแสดงผล
+// =====================================================
+
+async function teacherClearLearningRulesImage(){
+  const token = getTeacherToken();
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+
+  const ok = confirm(
+    'ต้องการลบรูปภาพกติกาการเรียนเดิมหรือไม่\n\n' +
+    'หลังจากลบแล้ว นักศึกษาจะเห็นเฉพาะข้อความกติกา จนกว่าอาจารย์จะอัปโหลดรูปใหม่'
+  );
+
+  if(!ok) return;
+
+  showLoading('กำลังลบรูปภาพกติกา', 'ระบบกำลังเคลียร์รูปภาพกติกาเดิม...');
+
+  try {
+    const { data, error } = await sb.rpc('teacher_clear_learning_rules_image_v2', {
+      p_token: token
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'ลบรูปภาพไม่สำเร็จ');
+      return;
+    }
+
+    toast('ลบรูปภาพกติกาเรียบร้อยแล้ว');
+
+    const fileInput = document.getElementById('teacherRuleImage');
+    if(fileInput) fileInput.value = '';
+
+    const imgBox = document.getElementById('teacherRulePreviewImage');
+    if(imgBox){
+      imgBox.innerHTML = '<div class="student-empty">ยังไม่มีภาพกติกา</div>';
+    }
+
+    await teacherLoadLearningRules();
+
+  } catch(err) {
+    hideLoading();
+    alert('ลบรูปภาพกติกาไม่สำเร็จ: ' + normalizeErrorMessage(err));
+  }
+}
