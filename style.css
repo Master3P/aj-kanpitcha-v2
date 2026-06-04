@@ -2208,3 +2208,282 @@ html, body{
     text-decoration:none !important;
   }
 }
+
+/* =====================================================
+   UI SIMPLIFY PHASE 1
+   Fixed Sidebar + Clean Teacher Layout
+   ทำให้เมนูอาจารย์นิ่ง เรียบ ใช้ง่ายขึ้น
+===================================================== */
+
+/* โครงหน้าฝั่งอาจารย์ใหม่: sidebar นิ่ง + content scroll */
+#pageTeacherPanel{
+  height:calc(100vh - 74px) !important;
+  overflow:hidden !important;
+}
+
+#pageTeacherPanel .container{
+  width:100% !important;
+  max-width:none !important;
+  height:100% !important;
+  margin:0 !important;
+  padding:0 !important;
+  display:grid !important;
+  grid-template-columns:270px minmax(0,1fr) !important;
+  gap:0 !important;
+  align-items:stretch !important;
+}
+
+/* ซ่อน head แบบเดิมที่กินพื้นที่ ถ้ามี */
+#pageTeacherPanel > .container > .head{
+  display:none !important;
+}
+
+/* Sidebar ซ้าย นิ่ง ไม่เลื่อนตาม content */
+#pageTeacherPanel .teacher-tabs{
+  grid-column:1 !important;
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+  height:100% !important;
+  min-height:0 !important;
+  max-height:none !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+
+  display:flex !important;
+  flex-direction:column !important;
+  gap:8px !important;
+
+  margin:0 !important;
+  padding:18px 14px !important;
+  border-radius:0 !important;
+
+  background:linear-gradient(180deg,#3b006e 0%,#5b0db7 50%,#6d28d9 100%) !important;
+  box-shadow:8px 0 28px rgba(63,0,117,.14) !important;
+}
+
+/* กล่องชื่อระบบด้านบน sidebar */
+#pageTeacherPanel .teacher-tabs::before{
+  content:"AJ.Kanpitcha\A ระบบจัดการชั้นเรียน";
+  white-space:pre-line;
+  display:block;
+  color:#fff;
+  background:rgba(255,255,255,.13);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:18px;
+  padding:16px 18px;
+  font-weight:900;
+  line-height:1.45;
+  margin:0 0 12px 0;
+  font-size:15px;
+}
+
+/* ปุ่มเมนูให้เรียบขึ้น ไม่ใหญ่เกิน */
+#pageTeacherPanel .teacher-tabs button,
+#pageTeacherPanel .teacher-tabs .btn-main{
+  width:100% !important;
+  min-height:46px !important;
+  padding:12px 14px !important;
+  border-radius:15px !important;
+
+  display:flex !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+
+  background:transparent !important;
+  color:#fff !important;
+  box-shadow:none !important;
+  border:1px solid transparent !important;
+
+  font-size:15px !important;
+  font-weight:900 !important;
+  text-align:left !important;
+
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+/* hover / active */
+#pageTeacherPanel .teacher-tabs button:hover{
+  background:rgba(255,255,255,.12) !important;
+  border-color:rgba(255,255,255,.10) !important;
+  transform:none !important;
+}
+
+#pageTeacherPanel .teacher-tabs button.active-tab{
+  background:rgba(255,255,255,.20) !important;
+  border-color:rgba(255,255,255,.20) !important;
+  box-shadow:inset 4px 0 0 rgba(255,255,255,.85) !important;
+}
+
+/* ปุ่มออกจากระบบให้อยู่ท้าย ๆ และเด่นพอดี */
+#pageTeacherPanel .teacher-tabs button[onclick*="teacherLogout"],
+#pageTeacherPanel .teacher-tabs button[onclick*="logout"]{
+  margin-top:12px !important;
+  background:rgba(255,255,255,.16) !important;
+}
+
+/* พื้นที่ขวาเป็นส่วนที่เลื่อน */
+#pageTeacherPanel .teacher-box{
+  grid-column:2 !important;
+  height:100% !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  padding:32px !important;
+  background:
+    radial-gradient(circle at top left, rgba(124,58,237,.10), transparent 28%),
+    radial-gradient(circle at bottom right, rgba(34,211,238,.12), transparent 32%),
+    linear-gradient(135deg,#fbf8ff 0%,#f5f1ff 46%,#eefcff 100%) !important;
+}
+
+/* ให้ทุกกล่อง content มีขนาดอ่านง่าย */
+#pageTeacherPanel .teacher-box > .card{
+  width:100% !important;
+  max-width:none !important;
+  min-height:auto !important;
+  border-radius:26px !important;
+  padding:28px !important;
+  background:rgba(255,255,255,.94) !important;
+  box-shadow:0 12px 30px rgba(63,0,117,.07) !important;
+}
+
+/* หัวข้อในแต่ละหน้าให้เรียบขึ้น */
+#pageTeacherPanel .teacher-box h2{
+  font-size:30px !important;
+  line-height:1.2 !important;
+  margin-bottom:6px !important;
+}
+
+#pageTeacherPanel .teacher-box h3{
+  font-size:22px !important;
+}
+
+/* ลด effect ให้ form ดูเรียบ */
+#pageTeacherPanel input,
+#pageTeacherPanel select,
+#pageTeacherPanel textarea{
+  border-radius:14px !important;
+  box-shadow:none !important;
+}
+
+#pageTeacherPanel input:focus,
+#pageTeacherPanel select:focus,
+#pageTeacherPanel textarea:focus{
+  box-shadow:0 0 0 3px rgba(124,58,237,.12) !important;
+}
+
+/* ปุ่มให้ดูเรียบกว่าเดิม */
+#pageTeacherPanel .btn-main{
+  border-radius:14px !important;
+  box-shadow:0 8px 18px rgba(109,40,217,.18) !important;
+}
+
+#pageTeacherPanel .btn-soft{
+  border-radius:14px !important;
+  box-shadow:none !important;
+}
+
+/* Dashboard card ลดความใหญ่ */
+#pageTeacherPanel .dashboard-grid{
+  grid-template-columns:repeat(3,minmax(180px,1fr)) !important;
+  gap:16px !important;
+}
+
+#pageTeacherPanel .dashboard-card{
+  border-radius:22px !important;
+  padding:22px !important;
+  box-shadow:0 8px 20px rgba(63,0,117,.05) !important;
+}
+
+#pageTeacherPanel .dashboard-num{
+  font-size:36px !important;
+}
+
+/* scroll bar sidebar ให้ดูเรียบ */
+#pageTeacherPanel .teacher-tabs::-webkit-scrollbar{
+  width:7px;
+}
+
+#pageTeacherPanel .teacher-tabs::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.06);
+}
+
+#pageTeacherPanel .teacher-tabs::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.34);
+  border-radius:999px;
+}
+
+/* ปิดผลของปุ่มซ่อน sidebar บน desktop เพื่อให้เมนูนิ่งเหมือนระบบเดิม */
+@media(min-width:901px){
+  .teacher-sidebar-toggle{
+    display:none !important;
+  }
+
+  body.teacher-sidebar-hidden #pageTeacherPanel .container{
+    grid-template-columns:270px minmax(0,1fr) !important;
+  }
+
+  body.teacher-sidebar-hidden #pageTeacherPanel .teacher-tabs{
+    display:flex !important;
+  }
+
+  body.teacher-sidebar-hidden #pageTeacherPanel .teacher-box{
+    grid-column:2 !important;
+  }
+}
+
+/* Tablet / Mobile ยังใช้เมนูแบบกดเปิดได้ */
+@media(max-width:900px){
+  #pageTeacherPanel{
+    height:auto !important;
+    overflow:auto !important;
+  }
+
+  #pageTeacherPanel .container{
+    display:block !important;
+    height:auto !important;
+  }
+
+  #pageTeacherPanel .teacher-tabs{
+    position:fixed !important;
+    left:12px !important;
+    right:12px !important;
+    top:70px !important;
+    height:auto !important;
+    max-height:70vh !important;
+    border-radius:24px !important;
+    z-index:9990 !important;
+    display:none !important;
+  }
+
+  body:not(.teacher-sidebar-hidden) #pageTeacherPanel .teacher-tabs{
+    display:flex !important;
+  }
+
+  body.teacher-sidebar-hidden #pageTeacherPanel .teacher-tabs{
+    display:none !important;
+  }
+
+  #pageTeacherPanel .teacher-box{
+    height:auto !important;
+    min-height:calc(100vh - 74px) !important;
+    padding:78px 16px 24px 16px !important;
+  }
+
+  .teacher-sidebar-toggle{
+    display:block !important;
+  }
+}
+
+/* จอเล็กมาก */
+@media(max-width:620px){
+  #pageTeacherPanel .teacher-box > .card{
+    padding:20px !important;
+    border-radius:22px !important;
+  }
+
+  #pageTeacherPanel .dashboard-grid{
+    grid-template-columns:1fr !important;
+  }
+}
