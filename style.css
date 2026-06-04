@@ -2487,3 +2487,14 @@ html, body{
     grid-template-columns:1fr !important;
   }
 }
+
+/* Sidebar section titles */
+#pageTeacherPanel .side-section-title{
+  color:rgba(255,255,255,.62);
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  padding:12px 14px 4px 14px;
+  margin-top:4px;
+}
