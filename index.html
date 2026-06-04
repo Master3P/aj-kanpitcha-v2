@@ -387,6 +387,7 @@
       <button class="btn-main" onclick="teacherTab('teacherLeaveBox')">ใบลา</button>
       <button class="btn-main" onclick="teacherTab('teacherScoreBox');teacherPrepareScorePage()">คะแนน</button>
       <button class="btn-main" onclick="teacherTab('teacherFilesBox');teacherPrepareFilesPage()">เอกสาร</button>
+      <button class="btn-main" onclick="teacherTab('teacherSettingsBox');teacherLoadSystemHealth()">ตั้งค่า</button>
     </div>
 
     <div id="teacherDashboardBox" class="teacher-box active">
@@ -629,6 +630,31 @@
     <button class="btn-soft full" onclick="teacherLoadDownloadFiles()">โหลดไฟล์ดาวน์โหลด</button>
 
     <div id="teacherDownloadFilesBox" class="mt-box"></div>
+  </div>
+</div>
+
+    <div id="teacherSettingsBox" class="teacher-box">
+  <div class="card">
+    <h2>ตั้งค่าระบบ</h2>
+    <p class="note">ใช้สำหรับเปิด/ปิดระบบนักศึกษา และตรวจสอบความพร้อมของระบบก่อนใช้งานจริง</p>
+
+    <label>สถานะระบบนักศึกษา</label>
+    <select id="studentSystemStatus">
+      <option value="เปิดใช้งาน">เปิดใช้งาน</option>
+      <option value="ปิดใช้งาน">ปิดใช้งาน</option>
+    </select>
+
+    <label>ข้อความแจ้งนักศึกษา</label>
+    <textarea id="studentSystemMessage" rows="3" placeholder="เช่น ขณะนี้ปิดระบบเพื่อปรับปรุงชั่วคราว"></textarea>
+
+    <button class="btn-main full" onclick="teacherUpdateStudentSystem()">บันทึกสถานะระบบนักศึกษา</button>
+
+    <hr>
+
+    <h3>ตรวจสุขภาพระบบ</h3>
+    <button class="btn-soft full" onclick="teacherLoadSystemHealth()">ตรวจสอบระบบ</button>
+
+    <div id="systemHealthBox" class="mt-box"></div>
   </div>
 </div>
     
