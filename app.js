@@ -3463,3 +3463,93 @@ function userFriendlyMessage(msg){
 function normalizeErrorMessage(err){
   return userFriendlyMessage(err?.message || err);
 }
+
+// =====================================================
+// FIX PRINT - Print only selected section
+// วางท้ายไฟล์ app.js
+// =====================================================
+
+function printSection(containerId){
+  const source = document.getElementById(containerId);
+
+  if(!source){
+    toast('ไม่พบส่วนที่ต้องการพิมพ์');
+    return;
+  }
+
+  // ลบ printArea เก่าก่อน ถ้ามี
+  const old = document.getElementById('printArea');
+  if(old) old.remove();
+
+  // สร้างพื้นที่สำหรับพิมพ์เฉพาะส่วน
+  const printArea = document.createElement('div');
+  printArea.id = 'printArea';
+
+  const title = document.createElement('div');
+  title.innerHTML = `
+    <h2 style="margin:0 0 8px 0;">AJ.Kanpitcha</h2>
+    <div style="margin-bottom:16px;font-size:14px;">
+      พิมพ์เมื่อ ${new Date().toLocaleString('th-TH')}
+    </div>
+  `;
+
+  const clone = source.cloneNode(true);
+
+  // เอาปุ่มพิมพ์ใน clone ออก กันซ้ำ
+  clone.querySelectorAll('button, .print-btn').forEach(x => x.remove());
+
+  printArea.appendChild(title);
+  printArea.appendChild(clone);
+
+  document.body.appendChild(printArea);
+  document.body.classList.add('printing-section');
+
+  const cleanup = () => {
+    document.body.classList.remove('printing-section');
+    const area = document.getElementById('printArea');
+    if(area) area.remove();
+    window.removeEventListener('afterprint', cleanup);
+  };
+
+  window.addEventListener('afterprint', cleanup);
+
+  setTimeout(() => {
+    window.print();
+
+    // กันบาง browser ไม่ยิง afterprint
+    setTimeout(cleanup, 1000);
+  }, 150);
+}
+
+function printCurrentPage(){
+  window.print();
+}
+
+function ensurePrintButton(containerId){
+  const box = document.getElementById(containerId);
+  if(!box) return;
+
+  if(box.querySelector('.print-btn')) return;
+
+  const btn = document.createElement('button');
+  btn.className = 'print-btn';
+  btn.innerText = 'พิมพ์ / บันทึก PDF';
+  btn.onclick = function(){
+    printSection(containerId);
+  };
+
+  box.prepend(btn);
+}
+
+function addPrintButtonsToReports(){
+  [
+    'teacherDashboardSummary',
+    'teacherScoreReportBox',
+    'teacherLeaveBoxList',
+    'teacherSubmissionReportBox',
+    'teacherExportBoxResult',
+    'attendanceTable',
+    'submissionStatusBox',
+    'leaveHistoryBox'
+  ].forEach(id => ensurePrintButton(id));
+}
