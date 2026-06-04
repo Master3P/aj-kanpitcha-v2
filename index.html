@@ -508,16 +508,15 @@
         <h2>จัดการชิ้นงาน</h2>
         <p class="zone-subtitle">กำหนดรายละเอียดงานโดยผูกกับคอลัมน์คะแนนใน Sheet</p>
       </div>
-      <div>
-        <select id="teacherAssignmentCourse"></select>
-        <button class="btn-main" onclick="teacherLoadSubmissionReport()">โหลดรายงาน</button>
-      </div>
     </div>
 
     <div class="teacher-two-col">
 
       <div class="teacher-zone soft">
         <h3>เพิ่ม / แก้ไขชิ้นงาน</h3>
+
+        <label>เลือกรายวิชา</label>
+        <select id="teacherAssignmentCourse"></select>
 
         <label>คอลัมน์คะแนนใน Sheet</label>
         <input id="assignmentColumn" placeholder="เช่น D, E, F, J">
@@ -552,20 +551,7 @@
     </div>
   </div>
 </div>
-
-    <hr>
-
-    <h3>รายงานการส่งงาน</h3>
-
-    <label>คอลัมน์ชิ้นงานที่ต้องการตรวจ</label>
-    <input id="submissionReportColumn" placeholder="เช่น D">
-
-    <button class="btn-soft full" onclick="teacherLoadSubmissionReport()">โหลดรายงานส่งงาน</button>
-
-    <div id="teacherSubmissionReportBox" class="mt-box"></div>
-  </div>
-</div>
-
+    
 <div id="teacherLeaveBox" class="teacher-box">
   <div class="card">
     <h2>รายการลาเรียน</h2>
