@@ -2435,3 +2435,162 @@ async function teacherPrepareDashboard(){
     await teacherLoadDashboard();
   }
 }
+
+// =====================================================
+// PHASE 12 - Stability / Settings / System Health
+// =====================================================
+
+let GLOBAL_BUSY = false;
+
+function normalizeErrorMessage(err){
+  const msg = String(err?.message || err || '');
+
+  if(msg.includes('Failed to fetch')){
+    return 'เชื่อมต่อระบบไม่สำเร็จ กรุณาตรวจอินเทอร์เน็ตหรือลองใหม่อีกครั้ง';
+  }
+
+  if(msg.includes('permission denied')){
+    return 'ระบบยังไม่ได้รับสิทธิ์เข้าถึงข้อมูล กรุณาตรวจสิทธิ์ใน Supabase';
+  }
+
+  if(msg.includes('JWT') || msg.includes('token')){
+    return 'สิทธิ์การใช้งานหมดอายุ กรุณาเข้าสู่ระบบใหม่';
+  }
+
+  if(msg.includes('Storage') || msg.includes('bucket')){
+    return 'อัปโหลดไฟล์ไม่สำเร็จ กรุณาตรวจชนิดไฟล์หรือพื้นที่จัดเก็บ';
+  }
+
+  if(msg.includes('Invalid key')){
+    return 'ชื่อไฟล์ไม่ถูกต้อง กรุณาเปลี่ยนชื่อไฟล์เป็นภาษาอังกฤษแล้วลองใหม่';
+  }
+
+  return msg || 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+}
+
+function setBusyButtons(isBusy){
+  GLOBAL_BUSY = isBusy;
+
+  document.querySelectorAll('button').forEach(btn => {
+    if(isBusy){
+      btn.dataset.oldDisabled = btn.disabled ? '1' : '0';
+      btn.disabled = true;
+    }else{
+      if(btn.dataset.oldDisabled === '0'){
+        btn.disabled = false;
+      }
+    }
+  });
+}
+
+function safeToast(msg){
+  toast(String(msg || '').replace(/\s+/g, ' ').trim());
+}
+
+async function teacherUpdateStudentSystem(){
+  const token = getTeacherToken();
+  const status = val('studentSystemStatus');
+  const message = val('studentSystemMessage');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+
+  showLoading('กำลังบันทึกการตั้งค่า', 'ระบบกำลังอัปเดตสถานะนักศึกษา...');
+
+  try {
+    const { data, error } = await sb.rpc('teacher_update_student_system_v2', {
+      p_token: token,
+      p_status: status,
+      p_message: message
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'บันทึกไม่สำเร็จ');
+      return;
+    }
+
+    toast('บันทึกสถานะระบบสำเร็จ');
+    await loadSettings();
+
+  } catch(err) {
+    hideLoading();
+    alert('บันทึกไม่สำเร็จ: ' + normalizeErrorMessage(err));
+  }
+}
+
+async function teacherLoadSystemHealth(){
+  const token = getTeacherToken();
+  const box = document.getElementById('systemHealthBox');
+
+  if(!box) return;
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+
+  box.innerHTML = 'กำลังตรวจสอบระบบ...';
+
+  try {
+    const { data, error } = await sb.rpc('teacher_get_system_health_v2', {
+      p_token: token
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = `<div class="note">${esc(data.message || 'ตรวจสอบไม่สำเร็จ')}</div>`;
+      return;
+    }
+
+    const d = data.data || {};
+
+    const statusEl = document.getElementById('studentSystemStatus');
+    const messageEl = document.getElementById('studentSystemMessage');
+
+    if(statusEl) statusEl.value = d.student_system_status || 'เปิดใช้งาน';
+    if(messageEl) messageEl.value = d.student_system_message || '';
+
+    box.innerHTML = `
+      <div class="dashboard-grid">
+        <div class="dashboard-card ${d.student_system_status === 'เปิดใช้งาน' ? 'dashboard-good' : 'dashboard-warn'}">
+          <b>ระบบนักศึกษา</b>
+          <div class="dashboard-num" style="font-size:24px">${esc(d.student_system_status || '-')}</div>
+          <small>${esc(d.student_system_message || '-')}</small>
+        </div>
+
+        <div class="dashboard-card">
+          <b>รายวิชา</b>
+          <div class="dashboard-num">${esc(d.courses || 0)}</div>
+          <small>วิชา</small>
+        </div>
+
+        <div class="dashboard-card">
+          <b>นักศึกษา</b>
+          <div class="dashboard-num">${esc(d.students || 0)}</div>
+          <small>คน</small>
+        </div>
+
+        <div class="dashboard-card">
+          <b>ชิ้นงาน</b>
+          <div class="dashboard-num">${esc(d.assignments || 0)}</div>
+          <small>ชิ้นงาน</small>
+        </div>
+
+        <div class="dashboard-card">
+          <b>งานที่ส่งแล้ว</b>
+          <div class="dashboard-num">${esc(d.submissions || 0)}</div>
+          <small>รายการ</small>
+        </div>
+
+        <div class="dashboard-card ${Number(d.scores_pending || 0) > 0 ? 'dashboard-warn' : 'dashboard-good'}">
+          <b>คะแนนรอซิงค์</b>
+          <div class="dashboard-num">${esc(d.scores_pending || 0)}</div>
+          <small>รายการ</small>
+        </div>
+      </div>
+    `;
+
+  } catch(err) {
+    box.innerHTML = `<div class="note">ตรวจสอบระบบไม่สำเร็จ: ${esc(normalizeErrorMessage(err))}</div>`;
+  }
+}
