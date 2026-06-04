@@ -485,17 +485,28 @@
     </div>
 
     <div class="teacher-tabs">
-      <button class="btn-main" onclick="teacherTab('teacherDashboardBox');teacherPrepareDashboard()">Dashboard</button>
+      <div class="side-section-title">ภาพรวม</div>
+      <button class="btn-main" onclick="teacherTab('teacherDashboardBox');teacherPrepareDashboard()">หน้าหลัก</button>
       <button class="btn-main" onclick="teacherTab('teacherCourseBox')">รายวิชา</button>
+
+      <div class="side-section-title">ข้อมูลผู้เรียน</div>
       <button class="btn-main" onclick="teacherTab('teacherStudentBox')">นักศึกษา</button>
+      
+      <div class="side-section-title">การเรียนการสอน</div>
       <button class="btn-main" onclick="teacherTab('teacherAttendanceBox')">เช็คชื่อ</button>
       <button class="btn-main" onclick="teacherTab('teacherAssignmentBox')">ชิ้นงาน</button>
       <button class="btn-main" onclick="teacherTab('teacherLeaveBox')">ใบลา</button>
+
+      <div class="side-section-title">คะแนนและการตรวจงาน</div>
       <button class="btn-main" onclick="teacherTab('teacherScoreBox');teacherPrepareScorePage()">คะแนน</button>
+
+      <div class="side-section-title">เอกสารและกติกา</div>
       <button class="btn-main" onclick="teacherTab('teacherFilesBox');teacherPrepareFilesPage()">เอกสาร</button>
-      <button class="btn-main" onclick="teacherTab('teacherSettingsBox');teacherLoadSystemHealth()">ตั้งค่า</button>
       <button class="btn-main" onclick="teacherTab('teacherRulesBox');teacherLoadLearningRules()">กติกา</button>
-      <button class="btn-main" onclick="teacherTab('teacherExportBox');teacherPrepareExportPage()">Export</button>
+
+      <div class="side-section-title">ระบบ</div>
+      <button class="btn-main" onclick="teacherTab('teacherSettingsBox');teacherLoadSystemHealth()">ตั้งค่า</button>
+      <button class="btn-main" onclick="teacherTab('teacherExportBox');teacherPrepareExportPage()">ส่งออกข้อมูล</button>
     </div>
 
     <div id="teacherDashboardBox" class="teacher-box active">
