@@ -503,27 +503,55 @@
     
     <div id="teacherAssignmentBox" class="teacher-box">
   <div class="card">
-    <h2>จัดการชิ้นงาน / รายละเอียดการส่งงาน</h2>
+    <div class="zone-title">
+      <div>
+        <h2>จัดการชิ้นงาน</h2>
+        <p class="zone-subtitle">กำหนดรายละเอียดงานโดยผูกกับคอลัมน์คะแนนใน Sheet</p>
+      </div>
+      <div>
+        <select id="teacherAssignmentCourse"></select>
+        <button class="btn-main" onclick="teacherLoadSubmissionReport()">โหลดรายงาน</button>
+      </div>
+    </div>
 
-    <label>เลือกรายวิชา</label>
-    <select id="teacherAssignmentCourse"></select>
+    <div class="teacher-two-col">
 
-    <label>คอลัมน์คะแนนใน Sheet</label>
-    <input id="assignmentColumn" placeholder="เช่น D, E, F, J">
+      <div class="teacher-zone soft">
+        <h3>เพิ่ม / แก้ไขชิ้นงาน</h3>
 
-    <label>ชื่อชิ้นงาน</label>
-    <input id="assignmentTitle" placeholder="เช่น ชิ้นงานที่ 1 วิเคราะห์สถานการณ์">
+        <label>คอลัมน์คะแนนใน Sheet</label>
+        <input id="assignmentColumn" placeholder="เช่น D, E, F, J">
 
-    <label>รายละเอียดงาน</label>
-    <textarea id="assignmentDescription" rows="5" placeholder="คำสั่งงาน / รายละเอียด / เกณฑ์เบื้องต้น"></textarea>
+        <label>ชื่อชิ้นงาน</label>
+        <input id="assignmentTitle" placeholder="เช่น ชิ้นงานที่ 1 วิเคราะห์สถานการณ์">
 
-    <label>คะแนนเต็ม</label>
-    <input id="assignmentMaxScore" type="number" placeholder="เช่น 10">
+        <label>รายละเอียดงาน</label>
+        <textarea id="assignmentDescription" rows="5" placeholder="คำสั่งงาน / รายละเอียด / เกณฑ์เบื้องต้น"></textarea>
 
-    <label>วันกำหนดส่ง</label>
-    <input id="assignmentDueDate" type="date">
+        <label>คะแนนเต็ม</label>
+        <input id="assignmentMaxScore" type="number" placeholder="เช่น 10">
 
-    <button class="btn-main full" onclick="teacherCreateAssignment()">บันทึกชิ้นงาน</button>
+        <label>วันกำหนดส่ง</label>
+        <input id="assignmentDueDate" type="date">
+
+        <button class="btn-main full" onclick="teacherCreateAssignment()">บันทึกชิ้นงาน</button>
+      </div>
+
+      <div class="teacher-zone">
+        <h3>รายงานการส่งงาน</h3>
+        <p class="zone-subtitle">กรอกคอลัมน์ชิ้นงานเพื่อดูว่านักศึกษาส่งแล้วหรือยัง</p>
+
+        <label>คอลัมน์ชิ้นงานที่ต้องการตรวจ</label>
+        <input id="submissionReportColumn" placeholder="เช่น D">
+
+        <button class="btn-soft full" onclick="teacherLoadSubmissionReport()">โหลดรายงานส่งงาน</button>
+
+        <div id="teacherSubmissionReportBox" class="mt-box"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
 
     <hr>
 
