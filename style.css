@@ -2498,3 +2498,206 @@ html, body{
   padding:12px 14px 4px 14px;
   margin-top:4px;
 }
+
+/* =====================================================
+   UI SIMPLIFY PHASE 2
+   Compact Teacher Pages
+   ลดความโล่ง/ยาว/ใหญ่เกินไป ให้ใกล้ระบบเดิมมากขึ้น
+===================================================== */
+
+/* ลดพื้นที่รอบหน้า */
+#pageTeacherPanel .teacher-box{
+  padding:24px 28px !important;
+}
+
+/* จำกัดความกว้างเนื้อหา ไม่ให้ฟอร์มยืดจนอ่านยาก */
+#pageTeacherPanel .teacher-box > .card{
+  max-width:1500px !important;
+  margin:0 auto !important;
+  padding:24px 26px !important;
+  border-radius:22px !important;
+}
+
+/* หัวข้อหน้าให้กระชับขึ้น */
+#pageTeacherPanel .zone-title{
+  margin-bottom:16px !important;
+  align-items:flex-start !important;
+}
+
+#pageTeacherPanel .zone-title h2,
+#pageTeacherPanel .teacher-box h2{
+  font-size:28px !important;
+  margin-bottom:4px !important;
+}
+
+#pageTeacherPanel .zone-title h3,
+#pageTeacherPanel .teacher-box h3{
+  font-size:20px !important;
+}
+
+#pageTeacherPanel .zone-subtitle,
+#pageTeacherPanel .teacher-box p{
+  font-size:14px !important;
+  color:#6b647a !important;
+}
+
+/* ลดช่องว่างระหว่าง section */
+#pageTeacherPanel hr{
+  margin:22px 0 !important;
+}
+
+/* กล่องย่อยให้เรียบขึ้น */
+#pageTeacherPanel .teacher-zone,
+#pageTeacherPanel .student-zone,
+#pageTeacherPanel .status-panel{
+  border-radius:20px !important;
+  padding:20px !important;
+  box-shadow:0 6px 18px rgba(63,0,117,.045) !important;
+}
+
+/* layout 2 คอลัมน์ให้สมดุล ไม่กินจอเกินไป */
+#pageTeacherPanel .teacher-two-col{
+  grid-template-columns:minmax(320px, 440px) minmax(0,1fr) !important;
+  gap:20px !important;
+}
+
+/* form grid ให้ดูเหมือนระบบงานมากขึ้น */
+#pageTeacherPanel label{
+  margin-top:8px !important;
+  margin-bottom:5px !important;
+  font-size:14px !important;
+}
+
+#pageTeacherPanel input,
+#pageTeacherPanel select,
+#pageTeacherPanel textarea{
+  min-height:42px !important;
+  padding:10px 13px !important;
+  font-size:15px !important;
+  margin-bottom:10px !important;
+  border-radius:12px !important;
+}
+
+#pageTeacherPanel textarea{
+  min-height:86px !important;
+}
+
+/* ปุ่มไม่ใหญ่เกิน */
+#pageTeacherPanel .btn-main,
+#pageTeacherPanel .btn-soft,
+#pageTeacherPanel button{
+  min-height:42px !important;
+  padding:10px 16px !important;
+  border-radius:12px !important;
+  font-size:14px !important;
+}
+
+/* ปุ่มเต็มแถวให้ไม่สูงเกิน */
+#pageTeacherPanel .btn-main.full,
+#pageTeacherPanel .btn-soft.full{
+  min-height:44px !important;
+}
+
+/* Dashboard ให้ compact */
+#pageTeacherPanel .dashboard-grid{
+  grid-template-columns:repeat(3,minmax(180px,1fr)) !important;
+  gap:14px !important;
+}
+
+#pageTeacherPanel .dashboard-card{
+  min-height:120px !important;
+  padding:18px 20px !important;
+  border-radius:20px !important;
+}
+
+#pageTeacherPanel .dashboard-card b{
+  font-size:15px !important;
+}
+
+#pageTeacherPanel .dashboard-num{
+  font-size:32px !important;
+  margin-top:8px !important;
+}
+
+/* ตารางให้อ่านง่ายแบบระบบเดิม */
+#pageTeacherPanel .table-wrap{
+  border-radius:14px !important;
+  margin-top:12px !important;
+}
+
+#pageTeacherPanel .modern-table th,
+#pageTeacherPanel table th{
+  padding:11px 12px !important;
+  font-size:14px !important;
+}
+
+#pageTeacherPanel .modern-table td,
+#pageTeacherPanel table td{
+  padding:10px 12px !important;
+  font-size:14px !important;
+}
+
+/* หน้า AI / คะแนน ลดความสูงกล่อง */
+#pageTeacherPanel .score-top-zone,
+#pageTeacherPanel .score-action-grid .teacher-zone{
+  border-radius:20px !important;
+  padding:20px !important;
+}
+
+#pageTeacherPanel #aiCommentBox{
+  min-height:120px !important;
+}
+
+/* ลด empty space ใน mt-box */
+#pageTeacherPanel .mt-box{
+  margin-top:12px !important;
+}
+
+/* ปรับ alert/note */
+#pageTeacherPanel .note{
+  border-radius:14px !important;
+  padding:12px 14px !important;
+  font-size:14px !important;
+}
+
+/* รายการแบบ card ให้เตี้ยลง */
+#pageTeacherPanel .student-row,
+#pageTeacherPanel .student-file-card{
+  padding:13px 16px !important;
+  border-radius:16px !important;
+  margin-bottom:9px !important;
+}
+
+/* Sidebar compact อีกนิด */
+#pageTeacherPanel .teacher-tabs{
+  width:270px !important;
+}
+
+#pageTeacherPanel .teacher-tabs button{
+  min-height:42px !important;
+  padding:10px 13px !important;
+  font-size:14px !important;
+}
+
+#pageTeacherPanel .side-section-title{
+  font-size:11px !important;
+  padding:10px 13px 3px 13px !important;
+}
+
+/* จอใหญ่ให้ไม่กระจายจนโล่ง */
+@media(min-width:1400px){
+  #pageTeacherPanel .teacher-box > .card{
+    max-width:1420px !important;
+  }
+}
+
+/* จอกลาง */
+@media(max-width:1200px){
+  #pageTeacherPanel .teacher-two-col{
+    grid-template-columns:1fr !important;
+  }
+
+  #pageTeacherPanel .dashboard-grid{
+    grid-template-columns:repeat(2,minmax(180px,1fr)) !important;
+  }
+}
