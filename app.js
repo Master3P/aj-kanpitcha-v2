@@ -421,7 +421,7 @@ async function refreshTeacherCourses(){
     ? COURSES.map(c => `<option value="${esc(c.id)}">${esc(c.display_name || c.course_name)}</option>`).join('')
     : '<option value="">ยังไม่มีรายวิชา</option>';
 
-  ['teacherStudentCourse','teacherAttendanceCourse','teacherAssignmentCourse','teacherLeaveCourse','teacherScoreCourse','teacherMaterialCourse'].forEach(id => {
+  ['teacherDashboardCourse','teacherStudentCourse','teacherAttendanceCourse','teacherAssignmentCourse','teacherLeaveCourse','teacherScoreCourse','teacherMaterialCourse','teacherExportCourse'].forEach(id => {
     const el = document.getElementById(id);
     if(el) el.innerHTML = html;
 });
@@ -2593,4 +2593,140 @@ async function teacherLoadSystemHealth(){
   } catch(err) {
     box.innerHTML = `<div class="note">ตรวจสอบระบบไม่สำเร็จ: ${esc(normalizeErrorMessage(err))}</div>`;
   }
+}
+
+// =====================================================
+// PHASE 13 - Export / Backup CSV
+// =====================================================
+
+async function teacherPrepareExportPage(){
+  await refreshTeacherCourses();
+}
+
+async function teacherExportCSV(){
+  const token = getTeacherToken();
+  const courseId = val('teacherExportCourse');
+  const exportType = val('teacherExportType');
+  const box = document.getElementById('teacherExportBoxResult');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+  if(!exportType) return toast('กรุณาเลือกประเภทข้อมูล');
+
+  if(box) box.innerHTML = 'กำลังเตรียมไฟล์ CSV...';
+
+  showLoading('กำลัง Export ข้อมูล', 'ระบบกำลังรวบรวมข้อมูลและสร้างไฟล์ CSV...');
+
+  try {
+    const { data, error } = await sb.rpc('teacher_export_data_v2', {
+      p_token: token,
+      p_course_id: courseId,
+      p_export_type: exportType
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      if(box) box.innerHTML = `<div class="note">${esc(data.message || 'Export ไม่สำเร็จ')}</div>`;
+      toast(data.message || 'Export ไม่สำเร็จ');
+      return;
+    }
+
+    const rows = data.data || [];
+
+    if(!rows.length){
+      if(box) box.innerHTML = '<div class="note">ไม่มีข้อมูลสำหรับส่งออก</div>';
+      toast('ไม่มีข้อมูลสำหรับส่งออก');
+      return;
+    }
+
+    const courseName = getSelectedText('teacherExportCourse') || 'course';
+    const fileName = buildExportFileName(courseName, exportType);
+
+    downloadCSV(rows, fileName);
+
+    if(box){
+      box.innerHTML = `<div class="note">Export สำเร็จ: ${esc(rows.length)} รายการ<br>ไฟล์: ${esc(fileName)}</div>`;
+    }
+
+    toast('ดาวน์โหลด CSV สำเร็จ');
+
+  } catch(err) {
+    hideLoading();
+    const msg = typeof normalizeErrorMessage === 'function'
+      ? normalizeErrorMessage(err)
+      : (err.message || err);
+
+    if(box) box.innerHTML = `<div class="note">Export ไม่สำเร็จ: ${esc(msg)}</div>`;
+    alert('Export ไม่สำเร็จ: ' + msg);
+  }
+}
+
+function downloadCSV(rows, fileName){
+  const headers = Object.keys(rows[0] || {});
+  const csvRows = [];
+
+  csvRows.push(headers.map(csvEscape).join(','));
+
+  rows.forEach(row => {
+    csvRows.push(
+      headers.map(h => csvEscape(row[h])).join(',')
+    );
+  });
+
+  // ใส่ BOM เพื่อให้ Excel อ่านภาษาไทยง่ายขึ้น
+  const csvContent = '\uFEFF' + csvRows.join('\n');
+
+  const blob = new Blob([csvContent], {
+    type: 'text/csv;charset=utf-8;'
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function csvEscape(value){
+  if(value === null || value === undefined) return '';
+
+  const text = String(value)
+    .replace(/\r?\n|\r/g, ' ')
+    .replace(/"/g, '""');
+
+  return `"${text}"`;
+}
+
+function buildExportFileName(courseName, exportType){
+  const typeMap = {
+    students: 'students',
+    submissions: 'submissions',
+    scores: 'scores',
+    leave: 'leave',
+    special_scores: 'special_scores',
+    attendance: 'attendance'
+  };
+
+  const safeCourse = String(courseName || 'course')
+    .replace(/[^\u0E00-\u0E7Fa-zA-Z0-9_-]/g, '_')
+    .replace(/_+/g, '_')
+    .slice(0, 80);
+
+  const date = new Date().toISOString().slice(0, 10);
+
+  return `${safeCourse}_${typeMap[exportType] || exportType}_${date}.csv`;
+}
+
+function getSelectedText(selectId){
+  const el = document.getElementById(selectId);
+  if(!el || !el.options || el.selectedIndex < 0) return '';
+  return el.options[el.selectedIndex].text || '';
 }
