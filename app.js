@@ -3871,3 +3871,80 @@ async function teacherSaveLearningRules(){
     alert('บันทึกกติกาไม่สำเร็จ: ' + normalizeErrorMessage(err));
   }
 }
+
+// =====================================================
+// FIX - Student Logout stuck page
+// วางท้ายไฟล์ app.js
+// =====================================================
+
+function studentLogout(){
+  try {
+    localStorage.removeItem('student');
+    localStorage.removeItem('student_info');
+    localStorage.removeItem('student_token');
+    localStorage.removeItem('studentId');
+    localStorage.removeItem('courseId');
+    localStorage.removeItem('STUDENT');
+  } catch(e) {}
+
+  // ล้างตัวแปรนักศึกษา
+  STUDENT = null;
+
+  // ปิด loading ถ้ามี
+  try {
+    hideLoading();
+  } catch(e) {
+    const loading = document.getElementById('loading');
+    if(loading) loading.classList.add('hidden');
+  }
+
+  // ปิด print mode / sidebar state ที่อาจค้าง
+  document.body.classList.remove('printing-section');
+  document.body.classList.remove('teacher-sidebar-hidden');
+
+  // ล้างข้อมูลที่แสดงบนหัวหน้าเมนูนักศึกษา
+  const studentInfo = document.getElementById('studentInfo');
+  if(studentInfo) studentInfo.innerText = '';
+
+  // ล้างช่อง login ถ้ามี
+  const loginStudentId = document.getElementById('loginStudentId');
+  const loginFullName = document.getElementById('loginFullName');
+
+  if(loginStudentId) loginStudentId.value = '';
+  if(loginFullName) loginFullName.value = '';
+
+  // หา page login ที่มีอยู่จริงใน index.html
+  const possibleLoginPages = [
+    'pageStudentLogin',
+    'pageLogin',
+    'pageStudentAuth',
+    'pageHome',
+    'pageWelcome'
+  ];
+
+  let targetPage = null;
+
+  for(const id of possibleLoginPages){
+    if(document.getElementById(id)){
+      targetPage = id;
+      break;
+    }
+  }
+
+  // ถ้าเจอหน้า login ให้ไปหน้านั้น
+  if(targetPage){
+    showPage(targetPage);
+    toast('ออกจากระบบแล้ว');
+    return;
+  }
+
+  // ถ้าไม่เจอจริง ๆ ให้ fallback แบบบังคับซ่อนทุกหน้า แล้วแสดงหน้าแรกที่มี
+  const pages = document.querySelectorAll('.page');
+  pages.forEach(p => p.classList.remove('active'));
+
+  if(pages.length){
+    pages[0].classList.add('active');
+  }
+
+  toast('ออกจากระบบแล้ว');
+}
