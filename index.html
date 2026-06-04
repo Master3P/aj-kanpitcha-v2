@@ -461,28 +461,46 @@
     </div>
 
     <div id="teacherAttendanceBox" class="teacher-box">
-      <div class="card">
-        <h2>เปิดรอบเช็คชื่อ</h2>
+  <div class="teacher-two-col">
 
-        <label>เลือกรายวิชา</label>
-        <select id="teacherAttendanceCourse"></select>
+    <div class="teacher-zone purple">
+      <h2>ระบบจัดการเช็คชื่อ</h2>
+      <p>เปิดรอบเช็คชื่อเข้าห้องเรียน และกำหนดรหัสเข้าเรียน</p>
 
-        <label>ชื่อรอบ</label>
-        <input id="attLabel" placeholder="เช่น รอบ 1, รอบเช้า, สอบย่อย">
+      <label>รายวิชา</label>
+      <select id="teacherAttendanceCourse"></select>
 
-        <label>รหัสเข้าเรียน</label>
-        <input id="attPin" placeholder="เช่น 1234">
+      <label>ชื่อรอบ</label>
+      <input id="attLabel" placeholder="เช่น รอบ 1, รอบเช้า, สอบย่อย">
 
-        <label>เวลาเปิดรับ นาที</label>
-        <input id="attDuration" type="number" value="10">
+      <label>รหัสเข้าเรียน</label>
+      <input id="attPin" placeholder="เช่น SCT01">
 
-        <button class="btn-main full" onclick="teacherOpenAttendance()">เปิดเช็คชื่อ</button>
+      <label>เวลาเปิดรับ นาที</label>
+      <input id="attDuration" type="number" value="10">
+
+      <button class="btn-main full" onclick="teacherOpenAttendance()">เปิดระบบเช็คชื่อทันที</button>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
         <button class="btn-soft full" onclick="teacherCloseAttendance()">ปิดเช็คชื่อ</button>
-        <button class="btn-soft full" onclick="teacherLoadAttendanceStatus()">โหลดสถานะ</button>
-
-        <div id="teacherAttendanceStatus" class="mt-box"></div>
+        <button class="btn-soft full" onclick="teacherLoadAttendanceStatus()">โหลดข้อมูล</button>
       </div>
     </div>
+
+    <div class="teacher-zone">
+      <div class="zone-title">
+        <div>
+          <h2>สถานะเช็คชื่อ</h2>
+          <p class="zone-subtitle">ดูรอบล่าสุดและจำนวนผู้เช็คชื่อ</p>
+        </div>
+      </div>
+
+      <div id="teacherAttendanceStatus" class="mt-box"></div>
+    </div>
+
+  </div>
+</div>
+    
     <div id="teacherAssignmentBox" class="teacher-box">
   <div class="card">
     <h2>จัดการชิ้นงาน / รายละเอียดการส่งงาน</h2>
