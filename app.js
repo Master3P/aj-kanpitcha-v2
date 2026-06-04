@@ -3948,3 +3948,329 @@ function studentLogout(){
 
   toast('ออกจากระบบแล้ว');
 }
+
+// =====================================================
+// DRIVE STORAGE MIGRATION PHASE 1
+// Upload files to Google Drive via Apps Script Bridge
+// =====================================================
+
+const USE_GOOGLE_DRIVE_STORAGE = true;
+const DRIVE_UPLOAD_MAX_SIZE = 15 * 1024 * 1024;
+
+function fileToBase64(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = String(reader.result || '');
+      const base64 = result.includes(',')
+        ? result.split(',')[1]
+        : result;
+
+      resolve(base64);
+    };
+
+    reader.onerror = () => reject(reader.error || new Error('อ่านไฟล์ไม่สำเร็จ'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadFileToDriveBridge(options){
+  if(!BRIDGE_URL || BRIDGE_URL.includes('ใส่')){
+    throw new Error('ยังไม่ได้ตั้งค่า BRIDGE_URL ใน config.js');
+  }
+
+  const file = options.file;
+
+  if(!file){
+    throw new Error('ไม่พบไฟล์ที่ต้องการอัปโหลด');
+  }
+
+  if(file.size > DRIVE_UPLOAD_MAX_SIZE){
+    throw new Error('ไฟล์ใหญ่เกิน 15 MB กรุณาลดขนาดไฟล์ก่อนอัปโหลด');
+  }
+
+  const base64Data = await fileToBase64(file);
+
+  const res = await fetch(BRIDGE_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8'
+    },
+    body: JSON.stringify({
+      action: 'uploadFileToDrive',
+      category: options.category || 'general',
+      courseId: options.courseId || '',
+      courseName: options.courseName || '',
+      studentId: options.studentId || '',
+      studentName: options.studentName || '',
+      itemColumn: options.itemColumn || '',
+      fileName: file.name,
+      mimeType: file.type || 'application/octet-stream',
+      base64Data: base64Data
+    })
+  });
+
+  const data = await res.json();
+
+  if(!data.ok){
+    throw new Error(data.message || 'อัปโหลดไฟล์ไป Google Drive ไม่สำเร็จ');
+  }
+
+  return data.data;
+}
+
+function getCurrentCourseName(courseSelectId){
+  const el = document.getElementById(courseSelectId);
+  if(!el || !el.options || el.selectedIndex < 0) return '';
+
+  return el.options[el.selectedIndex].text || '';
+}
+
+// =====================================================
+// DRIVE STORAGE - Override studentSubmitAssignment
+// =====================================================
+
+async function studentSubmitAssignment(){
+  if(!STUDENT) return toast('กรุณาเข้าสู่ระบบก่อน');
+
+  const itemColumn = val('submissionAssignment');
+  const fileInput = document.getElementById('submissionFile');
+  const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+  if(!itemColumn) return toast('กรุณาเลือกชิ้นงาน');
+  if(!file) return toast('กรุณาแนบไฟล์งาน');
+
+  showLoading('กำลังส่งงาน', 'ระบบกำลังอัปโหลดไฟล์ไป Google Drive...');
+
+  try {
+    const uploaded = await uploadFileToDriveBridge({
+      category: 'submissions',
+      courseId: STUDENT.course_id,
+      courseName: STUDENT.course_name || STUDENT.display_name || '',
+      studentId: STUDENT.student_id,
+      studentName: STUDENT.full_name,
+      itemColumn: itemColumn,
+      file: file
+    });
+
+    const { data, error } = await sb.rpc('student_submit_assignment_v2', {
+      p_course_id: STUDENT.course_id,
+      p_student_id: STUDENT.student_id,
+      p_item_column: itemColumn,
+      p_file_url: uploaded.fileUrl,
+      p_file_name: file.name
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'ส่งงานไม่สำเร็จ');
+      return;
+    }
+
+    toast('ส่งงานสำเร็จ');
+    if(fileInput) fileInput.value = '';
+
+    if(typeof loadStudentSubmissionStatus === 'function'){
+      await loadStudentSubmissionStatus();
+    }
+
+  } catch(err) {
+    hideLoading();
+    alert('ส่งงานไม่สำเร็จ: ' + normalizeErrorMessage(err));
+  }
+}
+
+// =====================================================
+// DRIVE STORAGE - Override studentSubmitLeave
+// =====================================================
+
+async function studentSubmitLeave(){
+  if(!STUDENT) return toast('กรุณาเข้าสู่ระบบก่อน');
+
+  const leaveDate = val('leaveDate');
+  const leaveType = val('leaveType');
+  const reason = val('leaveReason');
+
+  const fileInput = document.getElementById('leaveFile');
+  const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+  if(!leaveDate) return toast('กรุณาเลือกวันที่ลา');
+  if(!leaveType) return toast('กรุณาเลือกประเภทการลา');
+  if(!reason) return toast('กรุณากรอกเหตุผลการลา');
+
+  showLoading('กำลังส่งใบลา', 'ระบบกำลังบันทึกใบลาและอัปโหลดหลักฐาน...');
+
+  try {
+    let fileUrl = '';
+    let fileName = '';
+
+    if(file){
+      const uploaded = await uploadFileToDriveBridge({
+        category: 'leaves',
+        courseId: STUDENT.course_id,
+        courseName: STUDENT.course_name || STUDENT.display_name || '',
+        studentId: STUDENT.student_id,
+        studentName: STUDENT.full_name,
+        file: file
+      });
+
+      fileUrl = uploaded.fileUrl;
+      fileName = file.name;
+    }
+
+    const { data, error } = await sb.rpc('student_submit_leave_v2', {
+      p_course_id: STUDENT.course_id,
+      p_student_id: STUDENT.student_id,
+      p_leave_date: leaveDate,
+      p_leave_type: leaveType,
+      p_reason: reason,
+      p_file_url: fileUrl,
+      p_file_name: fileName
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'ส่งใบลาไม่สำเร็จ');
+      return;
+    }
+
+    toast('ส่งใบลาสำเร็จ');
+
+    document.getElementById('leaveDate').value = '';
+    document.getElementById('leaveReason').value = '';
+    if(fileInput) fileInput.value = '';
+
+    if(typeof loadStudentLeaveHistory === 'function'){
+      await loadStudentLeaveHistory();
+    }
+
+  } catch(err) {
+    hideLoading();
+    alert('ส่งใบลาไม่สำเร็จ: ' + normalizeErrorMessage(err));
+  }
+}
+
+// =====================================================
+// DRIVE STORAGE - Override teacherUploadMaterial
+// =====================================================
+
+async function teacherUploadMaterial(){
+  const token = getTeacherToken();
+  const courseId = val('teacherMaterialCourse');
+  const courseName = getCurrentCourseName('teacherMaterialCourse');
+  const title = val('materialTitle');
+  const description = val('materialDescription');
+
+  const fileInput = document.getElementById('materialFile');
+  const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+  if(!title) return toast('กรุณากรอกชื่อเอกสาร');
+  if(!file) return toast('กรุณาแนบไฟล์เอกสาร');
+
+  showLoading('กำลังอัปโหลดเอกสาร', 'ระบบกำลังบันทึกไฟล์ไป Google Drive...');
+
+  try {
+    const uploaded = await uploadFileToDriveBridge({
+      category: 'materials',
+      courseId: courseId,
+      courseName: courseName,
+      file: file
+    });
+
+    const { data, error } = await sb.rpc('teacher_create_material_v2', {
+      p_token: token,
+      p_course_id: courseId,
+      p_title: title,
+      p_description: description,
+      p_file_url: uploaded.fileUrl,
+      p_file_name: file.name
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'อัปโหลดเอกสารไม่สำเร็จ');
+      return;
+    }
+
+    toast('อัปโหลดเอกสารสำเร็จ');
+
+    document.getElementById('materialTitle').value = '';
+    document.getElementById('materialDescription').value = '';
+    if(fileInput) fileInput.value = '';
+
+    await teacherLoadMaterials();
+
+  } catch(err) {
+    hideLoading();
+    alert('อัปโหลดเอกสารไม่สำเร็จ: ' + normalizeErrorMessage(err));
+  }
+}
+
+// =====================================================
+// DRIVE STORAGE - Override teacherUploadDownloadFile
+// =====================================================
+
+async function teacherUploadDownloadFile(){
+  const token = getTeacherToken();
+  const title = val('downloadTitle');
+  const description = val('downloadDescription');
+
+  const fileInput = document.getElementById('downloadFile');
+  const file = fileInput && fileInput.files ? fileInput.files[0] : null;
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!title) return toast('กรุณากรอกชื่อไฟล์');
+  if(!file) return toast('กรุณาแนบไฟล์');
+
+  showLoading('กำลังอัปโหลดไฟล์', 'ระบบกำลังบันทึกไฟล์คำร้องไป Google Drive...');
+
+  try {
+    const uploaded = await uploadFileToDriveBridge({
+      category: 'downloads',
+      courseId: '',
+      courseName: 'ไฟล์คำร้อง',
+      file: file
+    });
+
+    const { data, error } = await sb.rpc('teacher_create_download_file_v2', {
+      p_token: token,
+      p_title: title,
+      p_description: description,
+      p_file_url: uploaded.fileUrl,
+      p_file_name: file.name
+    });
+
+    if(error) throw error;
+
+    hideLoading();
+
+    if(!data.ok){
+      toast(data.message || 'อัปโหลดไฟล์ไม่สำเร็จ');
+      return;
+    }
+
+    toast('อัปโหลดไฟล์คำร้องสำเร็จ');
+
+    document.getElementById('downloadTitle').value = '';
+    document.getElementById('downloadDescription').value = '';
+    if(fileInput) fileInput.value = '';
+
+    await teacherLoadDownloadFiles();
+
+  } catch(err) {
+    hideLoading();
+    alert('อัปโหลดไฟล์ไม่สำเร็จ: ' + normalizeErrorMessage(err));
+  }
+}
