@@ -2758,3 +2758,64 @@ function teacherTab(id){
 
   window.scrollTo({ top:0, behavior:'smooth' });
 }
+
+// =====================================================
+// FINAL FIX - Teacher Course Dropdowns + Export Course
+// วางท้ายไฟล์ app.js ได้เลย
+// =====================================================
+
+async function loadCourses(){
+  try {
+    const { data, error } = await sb
+      .from('courses')
+      .select('id, course_name, display_name')
+      .eq('status', 'ใช้งาน')
+      .order('created_at', { ascending:true });
+
+    if(error) throw error;
+
+    COURSES = Array.isArray(data) ? data : [];
+    return COURSES;
+
+  } catch(err) {
+    COURSES = [];
+    console.error('loadCourses error:', err);
+    throw err;
+  }
+}
+
+async function refreshTeacherCourses(){
+  await loadCourses();
+
+  const html = Array.isArray(COURSES) && COURSES.length
+    ? COURSES.map(c => `
+        <option value="${esc(c.id)}">
+          ${esc(c.display_name || c.course_name || 'ไม่ระบุชื่อรายวิชา')}
+        </option>
+      `).join('')
+    : '<option value="">ยังไม่มีรายวิชา</option>';
+
+  const targetIds = [
+    'teacherDashboardCourse',
+    'teacherStudentCourse',
+    'teacherAttendanceCourse',
+    'teacherAssignmentCourse',
+    'teacherLeaveCourse',
+    'teacherScoreCourse',
+    'teacherMaterialCourse',
+    'teacherExportCourse'
+  ];
+
+  targetIds.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = html;
+  });
+
+  if(typeof renderCourses === 'function'){
+    renderCourses();
+  }
+}
+
+async function teacherPrepareExportPage(){
+  await refreshTeacherCourses();
+}
