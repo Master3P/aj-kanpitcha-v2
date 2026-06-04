@@ -992,9 +992,22 @@ async function teacherLoadSubmissionReport(){
 }
 
 function makeSafeFileName(name){
-  return String(name || 'file')
-    .replace(/[^\u0E00-\u0E7Fa-zA-Z0-9._-]/g, '_')
-    .slice(0, 120);
+  const original = String(name || 'file');
+  const parts = original.split('.');
+  const ext = parts.length > 1 ? parts.pop().toLowerCase() : '';
+  const base = parts.join('.') || 'file';
+
+  const safeBase = base
+    .normalize('NFKD')
+    .replace(/[^\x00-\x7F]/g, '')      // ตัดอักษรไทย/อักขระพิเศษออกจาก path
+    .replace(/[^a-zA-Z0-9_-]/g, '_')   // เหลือเฉพาะอังกฤษ ตัวเลข _ -
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 80) || 'file';
+
+  const safeExt = ext.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
+
+  return safeExt ? `${safeBase}.${safeExt}` : safeBase;
 }
 
 // =====================================================
