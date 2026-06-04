@@ -994,20 +994,13 @@ async function teacherLoadSubmissionReport(){
 function makeSafeFileName(name){
   const original = String(name || 'file');
   const parts = original.split('.');
-  const ext = parts.length > 1 ? parts.pop().toLowerCase() : '';
-  const base = parts.join('.') || 'file';
+  const ext = parts.length > 1 ? parts.pop().toLowerCase() : 'bin';
 
-  const safeBase = base
-    .normalize('NFKD')
-    .replace(/[^\x00-\x7F]/g, '')      // ตัดอักษรไทย/อักขระพิเศษออกจาก path
-    .replace(/[^a-zA-Z0-9_-]/g, '_')   // เหลือเฉพาะอังกฤษ ตัวเลข _ -
-    .replace(/_+/g, '_')
-    .replace(/^_+|_+$/g, '')
-    .slice(0, 80) || 'file';
+  const safeExt = ext
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .slice(0, 10) || 'bin';
 
-  const safeExt = ext.replace(/[^a-zA-Z0-9]/g, '').slice(0, 10);
-
-  return safeExt ? `${safeBase}.${safeExt}` : safeBase;
+  return 'file.' + safeExt;
 }
 
 // =====================================================
@@ -1164,7 +1157,7 @@ async function studentSubmitLeave(){
       }
 
       const safeName = makeSafeFileName(file.name);
-      const path = `${STUDENT.course_id}/${STUDENT.student_id}_${Date.now()}_${safeName}`;
+      const path = `${STUDENT.course_id}/leave_${STUDENT.student_id}_${Date.now()}_${safeName}`;
 
       const upload = await sb.storage
         .from('leave-files')
@@ -1840,7 +1833,7 @@ async function teacherUploadMaterial(){
 
   try {
     const safeName = makeSafeFileName(file.name);
-    const path = `${courseId}/${Date.now()}_${safeName}`;
+    const path = `${courseId}/material_${Date.now()}_${safeName}`;
 
     const upload = await sb.storage
       .from('materials')
@@ -1954,7 +1947,7 @@ async function teacherUploadDownloadFile(){
 
   try {
     const safeName = makeSafeFileName(file.name);
-    const path = `${Date.now()}_${safeName}`;
+    const path = `download_${Date.now()}_${safeName}`;
 
     const upload = await sb.storage
       .from('download-files')
