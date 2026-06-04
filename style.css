@@ -689,3 +689,432 @@ hr{
     grid-template-columns:1fr;
   }
 }
+
+/* =====================================================
+   UI REVAMP PHASE 1
+   Modern AJ.Kanpitcha Layout
+   Sidebar + Dashboard Cards
+   วางท้ายไฟล์ style.css ได้เลย
+===================================================== */
+
+:root{
+  --aj-purple-950:#2b004f;
+  --aj-purple-900:#3b006e;
+  --aj-purple-800:#4c008a;
+  --aj-purple-700:#5b0db7;
+  --aj-purple-600:#6d28d9;
+  --aj-purple-500:#7c3aed;
+  --aj-purple-400:#a78bfa;
+  --aj-purple-100:#f3e8ff;
+  --aj-purple-50:#faf5ff;
+  --aj-blue-50:#eff6ff;
+  --aj-mint-50:#ecfeff;
+  --aj-card:#ffffff;
+  --aj-text:#1f1433;
+  --aj-muted:#6b647a;
+  --aj-line:#e9ddf8;
+  --aj-shadow:0 20px 45px rgba(63,0,117,.10);
+  --aj-soft-shadow:0 12px 28px rgba(63,0,117,.07);
+}
+
+/* พื้นหลังรวม */
+body{
+  background:
+    radial-gradient(circle at top left, rgba(124,58,237,.16), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(34,211,238,.14), transparent 32%),
+    linear-gradient(135deg,#fbf8ff 0%,#f5f1ff 45%,#eefcff 100%) !important;
+  color:var(--aj-text);
+}
+
+/* Topbar รวม */
+.topbar,
+.app-topbar,
+header{
+  backdrop-filter: blur(18px);
+}
+
+/* กล่องหลัก */
+.container{
+  width:min(1640px, calc(100% - 42px));
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.card,
+.login-card{
+  border:1px solid rgba(124,58,237,.14) !important;
+  border-radius:30px !important;
+  box-shadow:var(--aj-soft-shadow) !important;
+  background:rgba(255,255,255,.92) !important;
+}
+
+/* ปุ่มหลัก */
+.btn-main{
+  border:0 !important;
+  background:linear-gradient(135deg,var(--aj-purple-900),var(--aj-purple-500)) !important;
+  color:#fff !important;
+  border-radius:18px !important;
+  box-shadow:0 12px 24px rgba(109,40,217,.25) !important;
+  font-weight:900 !important;
+  transition:.18s ease !important;
+}
+
+.btn-main:hover{
+  transform:translateY(-1px);
+  box-shadow:0 16px 30px rgba(109,40,217,.32) !important;
+}
+
+.btn-soft{
+  background:#fff !important;
+  color:var(--aj-purple-900) !important;
+  border:1.5px solid var(--aj-line) !important;
+  border-radius:18px !important;
+  font-weight:900 !important;
+  box-shadow:0 8px 18px rgba(63,0,117,.05) !important;
+  transition:.18s ease !important;
+}
+
+.btn-soft:hover{
+  border-color:var(--aj-purple-400) !important;
+  transform:translateY(-1px);
+}
+
+/* input / select / textarea */
+input,
+select,
+textarea{
+  border:1.8px solid #dfd4ef !important;
+  border-radius:18px !important;
+  background:#fff !important;
+  color:var(--aj-text) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus{
+  outline:none !important;
+  border-color:var(--aj-purple-500) !important;
+  box-shadow:0 0 0 4px rgba(124,58,237,.13) !important;
+}
+
+/* =====================================================
+   STUDENT DASHBOARD
+===================================================== */
+
+#pageDashboard .head,
+#pageDashboard .page-head{
+  margin-bottom:28px;
+}
+
+#pageDashboard h1{
+  font-size:42px;
+  letter-spacing:-.5px;
+  color:var(--aj-purple-900);
+}
+
+#pageDashboard .menu-grid{
+  display:grid !important;
+  grid-template-columns:repeat(4, minmax(210px, 1fr)) !important;
+  gap:24px !important;
+}
+
+#pageDashboard .menu-card{
+  min-height:170px;
+  border-radius:30px !important;
+  background:rgba(255,255,255,.94) !important;
+  border:1px solid rgba(124,58,237,.12) !important;
+  box-shadow:var(--aj-soft-shadow) !important;
+  padding:28px !important;
+  position:relative !important;
+  overflow:hidden !important;
+  cursor:pointer !important;
+  transition:.2s ease !important;
+}
+
+#pageDashboard .menu-card::after{
+  content:"";
+  position:absolute;
+  right:-28px;
+  bottom:-36px;
+  width:120px;
+  height:120px;
+  background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(34,211,238,.06));
+  border-radius:50%;
+}
+
+#pageDashboard .menu-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 24px 48px rgba(63,0,117,.13) !important;
+  border-color:rgba(124,58,237,.28) !important;
+}
+
+#pageDashboard .menu-icon{
+  width:58px !important;
+  height:58px !important;
+  border-radius:18px !important;
+  background:linear-gradient(135deg,var(--aj-purple-800),var(--aj-purple-500)) !important;
+  color:#fff !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:26px !important;
+  margin-bottom:24px !important;
+}
+
+#pageDashboard .menu-card b{
+  display:block;
+  font-size:22px;
+  color:var(--aj-purple-900);
+  margin-bottom:8px;
+}
+
+#pageDashboard .menu-card span{
+  color:var(--aj-muted);
+  font-size:15px;
+}
+
+/* =====================================================
+   TEACHER PANEL: SIDEBAR LAYOUT
+===================================================== */
+
+#pageTeacherPanel .container{
+  width:100% !important;
+  max-width:none !important;
+  padding:0 30px 40px 30px !important;
+  display:grid !important;
+  grid-template-columns:300px minmax(0,1fr) !important;
+  gap:30px !important;
+  align-items:start !important;
+}
+
+#pageTeacherPanel .head{
+  grid-column:1 / -1 !important;
+  background:rgba(255,255,255,.82);
+  border:1px solid rgba(124,58,237,.12);
+  border-radius:28px;
+  padding:26px 30px;
+  box-shadow:var(--aj-soft-shadow);
+  margin-top:24px;
+}
+
+#pageTeacherPanel .head h1{
+  color:var(--aj-purple-900);
+  font-size:40px;
+  letter-spacing:-.4px;
+}
+
+/* Sidebar */
+#pageTeacherPanel .teacher-tabs{
+  grid-column:1 !important;
+  position:sticky !important;
+  top:22px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  gap:12px !important;
+  background:linear-gradient(180deg,var(--aj-purple-900),var(--aj-purple-600)) !important;
+  border-radius:30px !important;
+  padding:22px !important;
+  box-shadow:0 22px 50px rgba(63,0,117,.24) !important;
+  min-height:calc(100vh - 150px);
+  max-height:calc(100vh - 44px);
+  overflow:auto;
+}
+
+#pageTeacherPanel .teacher-tabs::before{
+  content:"AJ.Kanpitcha\A ระบบจัดการชั้นเรียน";
+  white-space:pre-line;
+  color:#fff;
+  background:rgba(255,255,255,.12);
+  border-radius:24px;
+  padding:20px;
+  font-weight:900;
+  line-height:1.45;
+  margin-bottom:8px;
+}
+
+#pageTeacherPanel .teacher-tabs .btn-main,
+#pageTeacherPanel .teacher-tabs button{
+  width:100% !important;
+  justify-content:flex-start !important;
+  text-align:left !important;
+  border-radius:20px !important;
+  padding:16px 18px !important;
+  background:rgba(255,255,255,.10) !important;
+  box-shadow:none !important;
+  color:#fff !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+}
+
+#pageTeacherPanel .teacher-tabs button:hover,
+#pageTeacherPanel .teacher-tabs button.active-tab{
+  background:rgba(255,255,255,.22) !important;
+  border-color:rgba(255,255,255,.24) !important;
+  transform:translateX(3px);
+}
+
+/* Content area */
+#pageTeacherPanel .teacher-box{
+  grid-column:2 !important;
+  min-width:0 !important;
+}
+
+#pageTeacherPanel .teacher-box > .card{
+  border-radius:34px !important;
+  padding:34px !important;
+  min-height:420px;
+}
+
+#pageTeacherPanel .teacher-box h2{
+  color:var(--aj-purple-900);
+  font-size:34px;
+  margin-bottom:8px;
+}
+
+#pageTeacherPanel .teacher-box h3{
+  color:var(--aj-purple-900);
+  font-size:24px;
+}
+
+/* เพิ่มความเป็นโซนให้ form */
+#pageTeacherPanel label{
+  color:var(--aj-purple-900);
+  font-weight:900;
+  margin-top:14px;
+}
+
+#pageTeacherPanel hr{
+  margin:34px 0;
+  border-top:1px solid var(--aj-line);
+}
+
+/* =====================================================
+   Dashboard Cards
+===================================================== */
+
+.dashboard-grid{
+  display:grid !important;
+  grid-template-columns:repeat(3, minmax(220px,1fr)) !important;
+  gap:18px !important;
+}
+
+.dashboard-card{
+  border-radius:28px !important;
+  padding:24px !important;
+  background:#fff !important;
+  border:1px solid rgba(124,58,237,.13) !important;
+  box-shadow:var(--aj-soft-shadow) !important;
+  position:relative;
+  overflow:hidden;
+}
+
+.dashboard-card::after{
+  content:"";
+  position:absolute;
+  right:-28px;
+  bottom:-34px;
+  width:110px;
+  height:110px;
+  border-radius:50%;
+  background:rgba(124,58,237,.08);
+}
+
+.dashboard-num{
+  font-size:42px !important;
+  color:#111a44 !important;
+}
+
+/* =====================================================
+   Table
+===================================================== */
+
+.table-wrap{
+  overflow:auto;
+  border-radius:24px;
+  border:1px solid var(--aj-line);
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+}
+
+th{
+  background:var(--aj-purple-50);
+  color:var(--aj-purple-900);
+  font-weight:900;
+  padding:14px;
+  border-bottom:1px solid var(--aj-line);
+}
+
+td{
+  padding:13px 14px;
+  border-bottom:1px solid #f0e8fb;
+  color:var(--aj-text);
+}
+
+tr:hover td{
+  background:#fcfaff;
+}
+
+/* =====================================================
+   Responsive
+===================================================== */
+
+@media(max-width:1100px){
+  #pageTeacherPanel .container{
+    grid-template-columns:1fr !important;
+  }
+
+  #pageTeacherPanel .teacher-tabs{
+    grid-column:1 !important;
+    position:relative !important;
+    top:auto !important;
+    min-height:auto !important;
+    max-height:none !important;
+    flex-direction:row !important;
+    overflow:auto !important;
+  }
+
+  #pageTeacherPanel .teacher-tabs::before{
+    display:none;
+  }
+
+  #pageTeacherPanel .teacher-tabs button{
+    min-width:150px;
+  }
+
+  #pageTeacherPanel .teacher-box{
+    grid-column:1 !important;
+  }
+
+  #pageDashboard .menu-grid{
+    grid-template-columns:repeat(2,1fr) !important;
+  }
+
+  .dashboard-grid{
+    grid-template-columns:repeat(2,1fr) !important;
+  }
+}
+
+@media(max-width:680px){
+  .container{
+    width:calc(100% - 24px);
+  }
+
+  #pageDashboard .menu-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  .dashboard-grid{
+    grid-template-columns:1fr !important;
+  }
+
+  #pageTeacherPanel .container{
+    padding:0 14px 30px 14px !important;
+  }
+
+  #pageTeacherPanel .teacher-box > .card{
+    padding:22px !important;
+  }
+}
