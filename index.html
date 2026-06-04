@@ -307,28 +307,44 @@
 </section>
   
   <!-- CHECK IN -->
-  <section id="pageCheckIn" class="page">
-    <div class="container narrow">
-      <div class="head">
-        <div>
-          <h1>เช็คชื่อเข้าเรียน</h1>
-          <p>กรอกรหัสเข้าเรียนที่ได้รับจากอาจารย์</p>
-        </div>
-        <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับ</button>
+<section id="pageCheckIn" class="page">
+  <div class="container">
+    <div class="student-page-title">
+      <div>
+        <h1>เช็คชื่อเข้าเรียน</h1>
+        <p>กรอกรหัสเข้าเรียนจากอาจารย์ และตรวจสอบสรุปการเช็คชื่อของวันนี้</p>
       </div>
+      <button class="btn-soft" onclick="showPage('pageDashboard')">← กลับเมนูหลัก</button>
+    </div>
 
-      <div class="card">
-        <div class="stat-grid" id="attendanceStats"></div>
+    <div class="student-page-shell">
 
-        <div id="attendanceTable"></div>
+      <div class="student-zone purple">
+        <h2>กรอกรหัสเข้าเรียน</h2>
+        <p>กรุณากดเช็คชื่อเพียงครั้งเดียว และรอระบบแจ้งผล</p>
 
         <label>รหัสเข้าเรียน</label>
         <input id="checkPin" placeholder="กรอกรหัสเข้าเรียน">
 
-        <button class="btn-main full" onclick="studentCheckIn()">เช็คชื่อ</button>
+        <button class="btn-main full" onclick="studentCheckIn()">เช็คชื่อเข้าเรียน</button>
       </div>
+
+      <div class="student-zone">
+        <div class="zone-title">
+          <div>
+            <h2>สรุปการเช็คชื่อวันนี้</h2>
+            <p class="zone-subtitle">ระบบแสดงทุกรอบที่อาจารย์เปิดในวันนี้</p>
+          </div>
+          <button class="btn-soft" onclick="loadAttendanceToday()">รีเฟรช</button>
+        </div>
+
+        <div class="stat-grid" id="attendanceStats"></div>
+        <div id="attendanceTable"></div>
+      </div>
+
     </div>
-  </section>
+  </div>
+</section>
 
   <!-- GUIDE -->
   <section id="pageGuide" class="page">
