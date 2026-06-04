@@ -1545,3 +1545,179 @@ body.teacher-sidebar-hidden #pageTeacherPanel .teacher-box{
     justify-content:flex-start;
   }
 }
+
+/* =====================================================
+   UI REVAMP PHASE 4
+   Student Pages Zone Layout
+===================================================== */
+
+.student-page-shell{
+  display:grid;
+  grid-template-columns:minmax(320px, 520px) minmax(0, 1fr);
+  gap:28px;
+  align-items:start;
+}
+
+.student-zone{
+  background:#fff;
+  border:1px solid rgba(124,58,237,.13);
+  border-radius:30px;
+  padding:28px;
+  box-shadow:0 12px 30px rgba(63,0,117,.06);
+}
+
+.student-zone.hero{
+  background:
+    radial-gradient(circle at top right, rgba(124,58,237,.14), transparent 38%),
+    linear-gradient(135deg,#fff,#faf7ff);
+}
+
+.student-zone.purple{
+  background:linear-gradient(160deg,#3b006e,#6d28d9);
+  color:#fff;
+}
+
+.student-zone.purple h2,
+.student-zone.purple h3,
+.student-zone.purple label,
+.student-zone.purple p{
+  color:#fff !important;
+}
+
+.student-zone.purple input,
+.student-zone.purple select,
+.student-zone.purple textarea{
+  background:rgba(255,255,255,.14) !important;
+  color:#fff !important;
+  border-color:rgba(255,255,255,.28) !important;
+}
+
+.student-zone.purple input::placeholder,
+.student-zone.purple textarea::placeholder{
+  color:rgba(255,255,255,.68) !important;
+}
+
+.student-zone.purple .btn-main{
+  background:linear-gradient(135deg,#ffd400,#ff9f1c) !important;
+  color:#2b004f !important;
+}
+
+.student-zone.purple .btn-soft{
+  background:#fff !important;
+  color:#3b006e !important;
+}
+
+.student-page-title{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:24px;
+}
+
+.student-page-title h1{
+  color:var(--aj-purple-900);
+  font-size:38px;
+  margin:0;
+}
+
+.student-page-title p{
+  color:var(--aj-muted);
+  margin:6px 0 0;
+}
+
+.student-status-card{
+  border:1px solid var(--aj-line);
+  border-radius:26px;
+  padding:22px;
+  background:#fff;
+  box-shadow:0 8px 22px rgba(63,0,117,.05);
+}
+
+.student-list-grid{
+  display:grid;
+  gap:14px;
+}
+
+.student-file-card{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:18px;
+  padding:18px 20px;
+  border:1px solid var(--aj-line);
+  border-radius:24px;
+  background:#fff;
+  box-shadow:0 8px 20px rgba(63,0,117,.04);
+}
+
+.student-file-card:hover{
+  border-color:rgba(124,58,237,.30);
+  box-shadow:0 14px 28px rgba(63,0,117,.08);
+}
+
+.student-file-card b{
+  color:var(--aj-purple-900);
+  font-size:18px;
+}
+
+.student-file-card small{
+  color:var(--aj-muted);
+}
+
+.student-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 12px;
+  border-radius:999px;
+  font-weight:900;
+  background:var(--aj-purple-50);
+  color:var(--aj-purple-900);
+  font-size:13px;
+}
+
+.student-badge.good{
+  background:#ecfdf5;
+  color:#047857;
+}
+
+.student-badge.warn{
+  background:#fff7ed;
+  color:#c2410c;
+}
+
+.student-form-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:16px;
+}
+
+.student-form-grid .wide{
+  grid-column:1 / -1;
+}
+
+.student-empty{
+  padding:28px;
+  text-align:center;
+  border:1px dashed var(--aj-line);
+  border-radius:26px;
+  background:#fff;
+  color:var(--aj-muted);
+  font-weight:800;
+}
+
+@media(max-width:980px){
+  .student-page-shell{
+    grid-template-columns:1fr;
+  }
+
+  .student-form-grid{
+    grid-template-columns:1fr;
+  }
+
+  .student-file-card{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+}
