@@ -567,62 +567,122 @@
 
     <div id="teacherScoreBox" class="teacher-box">
   <div class="card">
-    <h2>กรอกคะแนนรายคน</h2>
 
-    <label>เลือกรายวิชา</label>
-    <select id="teacherScoreCourse" onchange="teacherLoadScoreAssignments()"></select>
+    <div class="zone-title">
+      <div>
+        <h2>กรอกคะแนนรายคน / AI ตรวจงาน</h2>
+        <p class="zone-subtitle">เลือกวิชา ชิ้นงาน นักศึกษา แล้วบันทึกคะแนนหรือใช้ AI ช่วยตรวจงานรายคน</p>
+      </div>
+      <button class="btn-soft" onclick="teacherPrepareScorePage()">รีเฟรช</button>
+    </div>
 
-    <label>เลือกชิ้นงาน / คอลัมน์คะแนน</label>
-    <select id="teacherScoreAssignment"></select>
+    <!-- โซนที่ 1: เลือกรายวิชาและชิ้นงาน -->
+    <div class="score-top-zone">
+      <div>
+        <label>เลือกรายวิชา</label>
+        <select id="teacherScoreCourse" onchange="teacherLoadScoreAssignments()"></select>
+      </div>
 
-    <label>ค้นหานักศึกษา</label>
-    <input id="scoreStudentSearch" placeholder="พิมพ์รหัสหรือชื่อ" oninput="teacherSearchStudentsForScore()">
+      <div>
+        <label>เลือกชิ้นงาน / คะแนน</label>
+        <select id="teacherScoreAssignment"></select>
+      </div>
 
-    <div id="scoreStudentResults" class="mt-box"></div>
-
-    <hr>
-
-    <h3>บันทึกคะแนน</h3>
-
-    <label>นักศึกษาที่เลือก</label>
-    <input id="selectedScoreStudent" readonly placeholder="ยังไม่ได้เลือกนักศึกษา">
-    <input id="selectedScoreStudentId" type="hidden">
-
-    <label>คะแนน</label>
-    <input id="scoreValue" type="number" placeholder="กรอกคะแนน">
-
-    <label>หมายเหตุ / คอมเมนต์</label>
-    <textarea id="scoreComment" rows="3" placeholder="ถ้ามี"></textarea>
-
-    <button class="btn-main full" onclick="teacherSaveScore()">บันทึกคะแนน</button>
+      <div>
+        <label>คำสั่ง</label>
+        <button class="btn-main full" onclick="teacherLoadScoreReport()">โหลดรายงานคะแนน</button>
+      </div>
+    </div>
 
     <hr>
 
-    <h3>AI ตรวจงานรายคน</h3>
+    <!-- โซนที่ 2: ค้นหาและเลือกนักศึกษา -->
+    <div class="teacher-two-col">
 
-    <label>เกณฑ์ตรวจเพิ่มเติม</label>
-    <textarea id="aiRubric" rows="5" placeholder="เช่น ตรวจความครบถ้วน ความเข้าใจ การวิเคราะห์ การจัดรูปแบบ และการอ้างอิง"></textarea>
+      <div class="teacher-zone soft">
+        <h3>ค้นหานักศึกษา</h3>
+        <p class="zone-subtitle">พิมพ์รหัสหรือชื่อ ระบบจะแสดงรายชื่อให้อัตโนมัติ</p>
 
-    <button class="btn-main full" onclick="teacherRunAIReview()">AI ตรวจงานนักศึกษาที่เลือก</button>
+        <label>ค้นหานักศึกษา</label>
+        <input id="scoreStudentSearch" placeholder="พิมพ์รหัสหรือชื่อ" oninput="teacherSearchStudentsForScore()">
 
-    <label>คะแนนที่ AI เสนอ / คะแนนที่อาจารย์ยืนยัน</label>
-    <input id="aiFinalScore" type="number" placeholder="คะแนนหลังตรวจ">
+        <div id="scoreStudentResults" class="mt-box"></div>
+      </div>
 
-    <label>คอมเมนต์จาก AI / อาจารย์แก้ไขได้</label>
-    <textarea id="aiCommentBox" rows="8" placeholder="ผลตรวจจาก AI จะแสดงที่นี่ และอาจารย์แก้ไขได้"></textarea>
+      <div class="teacher-zone">
+        <h3>นักศึกษาที่เลือก</h3>
+        <p class="zone-subtitle">ตรวจสอบชื่อก่อนบันทึกคะแนนหรือใช้ AI ตรวจงาน</p>
 
-    <input id="aiReviewId" type="hidden">
+        <label>นักศึกษาที่เลือก</label>
+        <input id="selectedScoreStudent" readonly placeholder="ยังไม่ได้เลือกนักศึกษา">
+        <input id="selectedScoreStudentId" type="hidden">
 
-    <button class="btn-soft full" onclick="teacherConfirmAIReview()">ยืนยันคะแนนจาก AI</button>
-    
+        <div class="selected-student-hint">
+          เลือกนักศึกษาจากช่องค้นหาด้านซ้ายก่อนกรอกคะแนนหรือใช้ AI ตรวจงาน
+        </div>
+      </div>
+
+    </div>
+
     <hr>
 
-    <h3>รายงานคะแนน</h3>
+    <!-- โซนที่ 3: กรอกคะแนน + AI -->
+    <div class="score-action-grid">
 
-    <button class="btn-soft full" onclick="teacherLoadScoreReport()">โหลดรายงานคะแนน</button>
-    <button class="btn-soft full" onclick="syncScoresToGoogleSheet()">ซิงค์คะแนนคอลัมน์นี้เข้า Google Sheet</button>
+      <div class="teacher-zone">
+        <h3>กรอกคะแนนปกติ</h3>
+        <p class="zone-subtitle">ใช้สำหรับบันทึกคะแนนรายคนด้วยตนเอง</p>
 
-    <div id="teacherScoreReportBox" class="mt-box"></div>
+        <label>คะแนน</label>
+        <input id="scoreValue" type="number" placeholder="กรอกคะแนน">
+
+        <label>หมายเหตุ / คอมเมนต์</label>
+        <textarea id="scoreComment" rows="5" placeholder="ถ้ามี"></textarea>
+
+        <button class="btn-main full" onclick="teacherSaveScore()">บันทึกคะแนน</button>
+      </div>
+
+      <div class="teacher-zone ai-zone">
+        <h3>AI ตรวจงานรายคน</h3>
+        <p class="zone-subtitle">ใช้ AI ช่วยตรวจไฟล์งานของนักศึกษาที่เลือก แล้วอาจารย์ยืนยันคะแนนก่อนบันทึกจริง</p>
+
+        <label>เกณฑ์ตรวจเพิ่มเติม</label>
+        <textarea id="aiRubric" rows="5" placeholder="เช่น ตรวจความครบถ้วน ความเข้าใจ การวิเคราะห์ การจัดรูปแบบ และการอ้างอิง"></textarea>
+
+        <button class="btn-main full" onclick="teacherRunAIReview()">AI ตรวจงานนักศึกษาที่เลือก</button>
+
+        <label>คะแนนที่ AI เสนอ / คะแนนที่อาจารย์ยืนยัน</label>
+        <input id="aiFinalScore" type="number" placeholder="คะแนนหลังตรวจ">
+
+        <label>คอมเมนต์จาก AI / อาจารย์แก้ไขได้</label>
+        <textarea id="aiCommentBox" rows="8" placeholder="ผลตรวจจาก AI จะแสดงที่นี่ และอาจารย์แก้ไขได้"></textarea>
+
+        <input id="aiReviewId" type="hidden">
+
+        <button class="btn-soft full" onclick="teacherConfirmAIReview()">ยืนยันคะแนนจาก AI</button>
+      </div>
+
+    </div>
+
+    <hr>
+
+    <!-- โซนที่ 4: รายงานคะแนน -->
+    <div class="teacher-zone">
+      <div class="zone-title">
+        <div>
+          <h3>รายงานคะแนน</h3>
+          <p class="zone-subtitle">ดูคะแนนของชิ้นงานที่เลือก และซิงค์คะแนนกลับไปยัง Google Sheet</p>
+        </div>
+
+        <div class="score-report-actions">
+          <button class="btn-soft" onclick="teacherLoadScoreReport()">โหลดรายงานคะแนน</button>
+          <button class="btn-main" onclick="syncScoresToGoogleSheet()">ซิงค์คะแนนเข้า Google Sheet</button>
+        </div>
+      </div>
+
+      <div id="teacherScoreReportBox" class="mt-box"></div>
+    </div>
+
   </div>
 </div>
   
