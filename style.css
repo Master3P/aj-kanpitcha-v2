@@ -2701,3 +2701,72 @@ html, body{
     grid-template-columns:repeat(2,minmax(180px,1fr)) !important;
   }
 }
+
+/* Compact assignment editor rows */
+.assignment-row,
+.assignment-card,
+#teacherAssignmentBox .student-row{
+  border-radius:16px !important;
+  padding:16px !important;
+}
+
+#teacherAssignmentBox .assignment-grid,
+#teacherAssignmentBox .file-form-grid{
+  gap:12px !important;
+}
+
+#teacherAssignmentBox textarea{
+  min-height:70px !important;
+}
+
+#teacherAssignmentBox .btn-main.full{
+  margin-top:4px !important;
+}
+
+/* Submitted work page compact */
+#teacherSubmissionBox .card,
+#teacherSubmittedBox .card{
+  padding-top:24px !important;
+}
+
+#teacherSubmissionBox .filter-bar,
+#teacherSubmittedBox .filter-bar{
+  grid-template-columns:1fr 1fr 1fr !important;
+  gap:12px !important;
+  margin-bottom:12px !important;
+}
+
+#teacherSubmissionBox .btn-main.full,
+#teacherSubmittedBox .btn-main.full{
+  min-height:42px !important;
+}
+
+/* Documents / rules compact */
+#teacherRulesBox .teacher-two-col,
+#teacherFilesBox .teacher-two-col{
+  grid-template-columns:minmax(320px,480px) minmax(0,1fr) !important;
+}
+
+#teacherRulesBox textarea{
+  min-height:150px !important;
+}
+
+#teacherFilesBox .file-form-grid{
+  gap:12px !important;
+}
+
+#teacherFilesBox textarea{
+  min-height:70px !important;
+}
+
+#teacherDownloadBox .file-form-grid,
+#teacherFilesBox .file-form-grid{
+  grid-template-columns:1fr 1fr 1fr !important;
+}
+
+@media(max-width:1100px){
+  #teacherDownloadBox .file-form-grid,
+  #teacherFilesBox .file-form-grid{
+    grid-template-columns:1fr !important;
+  }
+}
