@@ -1901,3 +1901,241 @@ body.teacher-sidebar-hidden #pageTeacherPanel .teacher-box{
     font-size:14px;
   }
 }
+
+/* =====================================================
+   UI REVAMP PHASE 6
+   Responsive + Mobile + Final UX Polish
+===================================================== */
+
+/* ป้องกันตาราง/กล่องล้นจอ */
+html, body{
+  max-width:100%;
+  overflow-x:hidden;
+}
+
+.page{
+  min-height:calc(100vh - 76px);
+}
+
+/* ปรับ container ให้หายอึดอัดบนจอเล็ก */
+@media(max-width:780px){
+  .container{
+    width:100% !important;
+    padding:18px !important;
+  }
+
+  .card,
+  .login-card,
+  .student-zone,
+  .teacher-zone{
+    border-radius:24px !important;
+    padding:20px !important;
+  }
+
+  .head,
+  .student-page-title,
+  .zone-title{
+    flex-direction:column !important;
+    align-items:flex-start !important;
+  }
+
+  .student-page-title h1,
+  #pageDashboard h1,
+  #pageTeacherPanel .head h1{
+    font-size:30px !important;
+    line-height:1.15 !important;
+  }
+
+  .student-page-title p,
+  .zone-subtitle{
+    font-size:14px !important;
+  }
+}
+
+/* Sidebar mobile */
+@media(max-width:900px){
+  #pageTeacherPanel .container{
+    grid-template-columns:1fr !important;
+    padding-left:14px !important;
+    padding-right:14px !important;
+  }
+
+  #pageTeacherPanel .teacher-tabs{
+    position:fixed !important;
+    left:12px !important;
+    right:12px !important;
+    top:72px !important;
+    z-index:9990 !important;
+    min-height:auto !important;
+    max-height:70vh !important;
+    overflow:auto !important;
+    display:none !important;
+    border-radius:26px !important;
+  }
+
+  body:not(.teacher-sidebar-hidden) #pageTeacherPanel .teacher-tabs{
+    display:flex !important;
+    flex-direction:column !important;
+  }
+
+  body.teacher-sidebar-hidden #pageTeacherPanel .teacher-tabs{
+    display:none !important;
+  }
+
+  #pageTeacherPanel .teacher-box{
+    grid-column:1 !important;
+  }
+
+  #pageTeacherPanel .head{
+    padding-left:20px !important;
+    padding-top:70px !important;
+  }
+
+  .teacher-sidebar-toggle{
+    left:14px !important;
+    top:14px !important;
+  }
+}
+
+/* ปรับปุ่มบนมือถือให้กดง่าย */
+@media(max-width:620px){
+  button,
+  .btn-main,
+  .btn-soft{
+    min-height:44px;
+  }
+
+  .full{
+    width:100% !important;
+  }
+
+  .action-row,
+  .score-report-actions{
+    flex-direction:column;
+    align-items:stretch;
+  }
+
+  .action-row button,
+  .score-report-actions button,
+  .action-row a{
+    width:100%;
+  }
+
+  input,
+  select,
+  textarea{
+    font-size:16px !important;
+  }
+}
+
+/* ตารางบนมือถือ เลื่อนแนวนอนแบบนุ่ม */
+.table-wrap{
+  width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+.modern-table{
+  min-width:720px;
+}
+
+/* Loading สวยขึ้น */
+.loading-card{
+  border:1px solid rgba(124,58,237,.12);
+  box-shadow:0 30px 80px rgba(63,0,117,.22) !important;
+}
+
+.loading-card h2{
+  color:var(--aj-purple-900);
+}
+
+.loading-ring{
+  animation:softPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes softPulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.05)}
+}
+
+/* Toast ปรับให้อ่านง่าย */
+.toast{
+  min-width:260px;
+  max-width:min(92vw,520px);
+  text-align:center;
+  border-radius:18px !important;
+  padding:14px 20px !important;
+  background:linear-gradient(135deg,#231033,#3b006e) !important;
+  box-shadow:0 18px 44px rgba(0,0,0,.24) !important;
+}
+
+/* Empty state */
+.student-empty,
+.empty-state{
+  min-height:110px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  gap:8px;
+}
+
+/* ปุ่ม print */
+.print-btn{
+  background:#fff !important;
+  color:var(--aj-purple-900) !important;
+  border:1.5px solid var(--aj-line) !important;
+  border-radius:18px !important;
+  padding:12px 18px !important;
+  font-weight:900 !important;
+  cursor:pointer;
+}
+
+/* Print layout */
+@media print{
+  body{
+    background:#fff !important;
+  }
+
+  .topbar,
+  .teacher-sidebar-toggle,
+  #pageTeacherPanel .teacher-tabs,
+  button,
+  .btn-main,
+  .btn-soft,
+  .print-btn,
+  .loading,
+  .toast{
+    display:none !important;
+  }
+
+  #pageTeacherPanel .container,
+  .container{
+    display:block !important;
+    width:100% !important;
+    padding:0 !important;
+    margin:0 !important;
+  }
+
+  .teacher-box,
+  .page.active{
+    display:block !important;
+  }
+
+  .card,
+  .teacher-zone,
+  .student-zone{
+    box-shadow:none !important;
+    border:1px solid #ddd !important;
+    page-break-inside:avoid;
+  }
+
+  table{
+    page-break-inside:auto;
+  }
+
+  tr{
+    page-break-inside:avoid;
+    page-break-after:auto;
+  }
+}
