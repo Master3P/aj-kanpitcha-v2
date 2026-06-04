@@ -1331,3 +1331,37 @@ tr:hover td{
     grid-template-columns:1fr;
   }
 }
+
+/* =====================================================
+   UI REVAMP PHASE 2 - Student Menu polish
+===================================================== */
+
+#pageDashboard{
+  padding-top:20px;
+}
+
+#pageDashboard .head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:20px;
+  margin-bottom:28px;
+}
+
+#pageDashboard .head p{
+  color:var(--aj-muted);
+  font-size:17px;
+}
+
+#pageDashboard footer,
+#pageDashboard .footer{
+  margin-top:30px;
+  color:var(--aj-muted);
+  text-align:center;
+}
+
+/* ให้ปุ่มรีเฟรชดูเป็น pill */
+#pageDashboard .head .btn-soft{
+  border-radius:20px !important;
+  padding:14px 22px !important;
+}
