@@ -2988,3 +2988,328 @@ async function loadDownloadFiles(){
     box.innerHTML = `<div class="student-empty">โหลดไฟล์ไม่สำเร็จ: ${esc(normalizeErrorMessage(err))}</div>`;
   }
 }
+
+// =====================================================
+// UI REVAMP PHASE 5 - Helpers
+// Modern badges / tables
+// =====================================================
+
+function statusBadge(status){
+  const s = String(status || '-');
+
+  if(['ส่งแล้ว','เช็คแล้ว','ซิงค์แล้ว','รับทราบ','เปิดใช้งาน','มาเรียน','ยืนยันแล้ว'].includes(s)){
+    return `<span class="status-badge good">✓ ${esc(s)}</span>`;
+  }
+
+  if(['ยังไม่ส่ง','ยังไม่เช็ค','รอซิงค์','รอยืนยัน','ส่งแล้ว'].includes(s)){
+    return `<span class="status-badge warn">${esc(s)}</span>`;
+  }
+
+  if(['ไม่อนุมัติ','ปิดใช้งาน','ถอนรายชื่อ'].includes(s)){
+    return `<span class="status-badge danger">${esc(s)}</span>`;
+  }
+
+  if(['เปิด','กำลังดำเนินการ'].includes(s)){
+    return `<span class="status-badge info">${esc(s)}</span>`;
+  }
+
+  if(['ปิด'].includes(s)){
+    return `<span class="status-badge gray">${esc(s)}</span>`;
+  }
+
+  return `<span class="status-badge gray">${esc(s)}</span>`;
+}
+
+function modernEmpty(text){
+  return `<div class="student-empty">${esc(text || 'ยังไม่มีข้อมูล')}</div>`;
+}
+
+function modernTable(headers, rowsHtml){
+  return `
+    <div class="table-wrap">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            ${headers.map(h => `<th>${esc(h)}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// =====================================================
+// UI REVAMP PHASE 5 - Student submission status table
+// =====================================================
+
+async function loadStudentSubmissionStatus(){
+  const box = document.getElementById('submissionStatusBox');
+  if(!box) return;
+
+  box.innerHTML = 'กำลังโหลดสถานะ...';
+
+  try {
+    const { data, error } = await sb.rpc('student_get_submission_status_v2', {
+      p_course_id: STUDENT.course_id,
+      p_student_id: STUDENT.student_id
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = modernEmpty(data.message || 'โหลดสถานะไม่สำเร็จ');
+      return;
+    }
+
+    const rows = data.data || [];
+
+    if(!rows.length){
+      box.innerHTML = modernEmpty('ยังไม่มีชิ้นงานที่เปิดให้ส่ง');
+      return;
+    }
+
+    box.innerHTML = modernTable(
+      ['ชิ้นงาน', 'คะแนนเต็ม', 'สถานะ', 'เวลาส่งล่าสุด', 'ไฟล์'],
+      rows.map(r => `
+        <tr>
+          <td><b>${esc(r.title || '-')}</b></td>
+          <td>${esc(r.max_score || '-')}</td>
+          <td>${statusBadge(r.status || 'ยังไม่ส่ง')}</td>
+          <td>${formatDateTime(r.submitted_at)}</td>
+          <td>${r.file_url ? `<a class="compact-link" target="_blank" href="${esc(r.file_url)}">เปิดไฟล์</a>` : '-'}</td>
+        </tr>
+      `).join('')
+    );
+
+  } catch(err) {
+    box.innerHTML = modernEmpty('โหลดสถานะไม่สำเร็จ: ' + normalizeErrorMessage(err));
+  }
+}
+
+// =====================================================
+// UI REVAMP PHASE 5 - Student leave history
+// =====================================================
+
+async function loadStudentLeaveHistory(){
+  if(!STUDENT) return;
+
+  const box = document.getElementById('leaveHistoryBox');
+  if(!box) return;
+
+  box.innerHTML = 'กำลังโหลดประวัติการลา...';
+
+  try {
+    const { data, error } = await sb.rpc('student_get_leave_history_v2', {
+      p_course_id: STUDENT.course_id,
+      p_student_id: STUDENT.student_id
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = modernEmpty(data.message || 'โหลดประวัติไม่สำเร็จ');
+      return;
+    }
+
+    const rows = data.data || [];
+
+    if(!rows.length){
+      box.innerHTML = modernEmpty('ยังไม่มีประวัติการลา');
+      return;
+    }
+
+    box.innerHTML = modernTable(
+      ['วันที่ส่ง', 'วันที่ลา', 'ประเภท', 'เหตุผล', 'หลักฐาน', 'สถานะ'],
+      rows.map(r => `
+        <tr>
+          <td>${formatDateTime(r.created_at)}</td>
+          <td>${esc(r.leave_date || '-')}</td>
+          <td>${esc(r.leave_type || '-')}</td>
+          <td>${esc(r.reason || '-')}</td>
+          <td>${r.file_url ? `<a class="compact-link" target="_blank" href="${esc(r.file_url)}">เปิดหลักฐาน</a>` : '-'}</td>
+          <td>${statusBadge(r.status || '-')}</td>
+        </tr>
+      `).join('')
+    );
+
+  } catch(err) {
+    box.innerHTML = modernEmpty('โหลดประวัติไม่สำเร็จ: ' + normalizeErrorMessage(err));
+  }
+}
+
+// =====================================================
+// UI REVAMP PHASE 5 - Teacher score report
+// =====================================================
+
+async function teacherLoadScoreReport(){
+  const token = getTeacherToken();
+  const courseId = val('teacherScoreCourse');
+  const itemColumn = val('teacherScoreAssignment');
+  const box = document.getElementById('teacherScoreReportBox');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+  if(!itemColumn) return toast('กรุณาเลือกชิ้นงาน');
+  if(!box) return;
+
+  box.innerHTML = 'กำลังโหลดรายงานคะแนน...';
+
+  try {
+    const { data, error } = await sb.rpc('teacher_get_score_report_v2', {
+      p_token: token,
+      p_course_id: courseId,
+      p_item_column: itemColumn
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = modernEmpty(data.message || 'โหลดรายงานไม่สำเร็จ');
+      return;
+    }
+
+    const rows = data.data || [];
+
+    if(!rows.length){
+      box.innerHTML = modernEmpty('ยังไม่มีข้อมูลคะแนน');
+      return;
+    }
+
+    box.innerHTML = `
+      <div class="table-toolbar">
+        <div>
+          <h3>รายงานคะแนน</h3>
+          <div class="table-note">แสดงคะแนนของชิ้นงานที่เลือก พร้อมสถานะการซิงค์</div>
+        </div>
+      </div>
+      ${modernTable(
+        ['รหัส', 'ชื่อ', 'คะแนน', 'หมายเหตุ', 'สถานะซิงค์', 'แก้ไขล่าสุด'],
+        rows.map(r => `
+          <tr>
+            <td>${esc(r.student_id)}</td>
+            <td><b>${esc(r.full_name)}</b></td>
+            <td><b>${r.score ?? '-'}</b></td>
+            <td>${esc(r.teacher_comment || '-')}</td>
+            <td>${statusBadge(r.sync_status || '-')}</td>
+            <td>${formatDateTime(r.updated_at)}</td>
+          </tr>
+        `).join('')
+      )}
+    `;
+
+  } catch(err) {
+    box.innerHTML = modernEmpty('โหลดรายงานไม่สำเร็จ: ' + normalizeErrorMessage(err));
+  }
+}
+
+// =====================================================
+// UI REVAMP PHASE 5 - Teacher leave requests
+// =====================================================
+
+async function teacherLoadLeaveRequests(){
+  const token = getTeacherToken();
+  const courseId = val('teacherLeaveCourse');
+  const box = document.getElementById('teacherLeaveBoxList');
+
+  if(!token) return toast('กรุณาเข้าสู่ระบบอาจารย์');
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+  if(!box) return;
+
+  box.innerHTML = 'กำลังโหลดรายการลา...';
+
+  try {
+    const { data, error } = await sb.rpc('teacher_get_leave_requests_v2', {
+      p_token: token,
+      p_course_id: courseId
+    });
+
+    if(error) throw error;
+
+    if(!data.ok){
+      box.innerHTML = modernEmpty(data.message || 'โหลดรายการไม่สำเร็จ');
+      return;
+    }
+
+    const rows = data.data || [];
+
+    if(!rows.length){
+      box.innerHTML = modernEmpty('ยังไม่มีรายการลาเรียน');
+      return;
+    }
+
+    box.innerHTML = modernTable(
+      ['วันที่ส่ง', 'รหัส', 'ชื่อ', 'วันที่ลา', 'ประเภท', 'หลักฐาน', 'สถานะ', 'จัดการ'],
+      rows.map(r => `
+        <tr>
+          <td>${formatDateTime(r.created_at)}</td>
+          <td>${esc(r.student_id)}</td>
+          <td><b>${esc(r.full_name)}</b><br><small>${esc(r.reason || '-')}</small></td>
+          <td>${esc(r.leave_date || '-')}</td>
+          <td>${esc(r.leave_type || '-')}</td>
+          <td>${r.file_url ? `<a class="compact-link" target="_blank" href="${esc(r.file_url)}">เปิดหลักฐาน</a>` : '-'}</td>
+          <td>${statusBadge(r.status || '-')}</td>
+          <td>
+            <div class="action-row">
+              <button class="btn-soft small" onclick="teacherUpdateLeaveStatus('${esc(r.id)}','รับทราบ')">รับทราบ</button>
+              <button class="btn-soft small" onclick="teacherUpdateLeaveStatus('${esc(r.id)}','ไม่อนุมัติ')">ไม่อนุมัติ</button>
+            </div>
+          </td>
+        </tr>
+      `).join('')
+    );
+
+  } catch(err) {
+    box.innerHTML = modernEmpty('โหลดรายการลาไม่สำเร็จ: ' + normalizeErrorMessage(err));
+  }
+}
+
+// =====================================================
+// UI REVAMP PHASE 5 - Student attendance summary
+// =====================================================
+
+function renderAttendanceSummary(d){
+  const stats = document.getElementById('attendanceStats');
+  const tableBox = document.getElementById('attendanceTable');
+
+  if(stats){
+    stats.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-num">${esc(d.total_today || 0)}</div>
+        <b>รอบวันนี้</b>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${esc(d.checked_today || 0)}</div>
+        <b>เช็คแล้ว</b>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num">${esc(d.missing_today || 0)}</div>
+        <b>ยังไม่เช็ค</b>
+      </div>
+    `;
+  }
+
+  const rows = d.rows || [];
+
+  if(!tableBox) return;
+
+  if(!rows.length){
+    tableBox.innerHTML = modernEmpty('วันนี้ยังไม่มีรอบเช็คชื่อ');
+    return;
+  }
+
+  tableBox.innerHTML = modernTable(
+    ['ครั้งที่', 'ชื่อรอบ', 'เวลาเปิด', 'หมดเวลา', 'สถานะ'],
+    rows.map(r => `
+      <tr>
+        <td>${esc(r.session_no || '-')}</td>
+        <td><b>${esc(r.session_label || '-')}</b></td>
+        <td>${formatDateTime(r.opened_at)}</td>
+        <td>${formatDateTime(r.close_at)}</td>
+        <td>${statusBadge(r.status === 'เช็คแล้ว' ? 'เช็คแล้ว' : 'ยังไม่เช็ค')}</td>
+      </tr>
+    `).join('')
+  );
+}
