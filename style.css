@@ -2139,3 +2139,72 @@ html, body{
     page-break-after:auto;
   }
 }
+
+/* =====================================================
+   FIX PRINT - Print only selected report section
+   วางท้ายไฟล์ style.css
+===================================================== */
+
+#printArea{
+  display:none;
+}
+
+/* ตอนสั่งพิมพ์เฉพาะส่วน ให้ซ่อนทุกอย่าง ยกเว้น printArea */
+@media print{
+  body.printing-section > *:not(#printArea){
+    display:none !important;
+  }
+
+  body.printing-section #printArea{
+    display:block !important;
+    width:100% !important;
+    margin:0 !important;
+    padding:0 !important;
+    background:#fff !important;
+    color:#000 !important;
+  }
+
+  body.printing-section #printArea *{
+    visibility:visible !important;
+  }
+
+  body.printing-section #printArea .card,
+  body.printing-section #printArea .teacher-zone,
+  body.printing-section #printArea .student-zone,
+  body.printing-section #printArea .dashboard-card{
+    box-shadow:none !important;
+    border:1px solid #ddd !important;
+    background:#fff !important;
+    color:#000 !important;
+  }
+
+  body.printing-section #printArea button,
+  body.printing-section #printArea .btn-main,
+  body.printing-section #printArea .btn-soft,
+  body.printing-section #printArea .print-btn{
+    display:none !important;
+  }
+
+  body.printing-section #printArea table{
+    width:100% !important;
+    border-collapse:collapse !important;
+  }
+
+  body.printing-section #printArea th,
+  body.printing-section #printArea td{
+    border:1px solid #ccc !important;
+    padding:8px !important;
+    color:#000 !important;
+    background:#fff !important;
+  }
+
+  body.printing-section #printArea th{
+    font-weight:900 !important;
+    background:#f2f2f2 !important;
+  }
+
+  body.printing-section #printArea a{
+    color:#000 !important;
+    text-decoration:none !important;
+  }
+}
