@@ -533,28 +533,31 @@
 </div>
     
     <div id="teacherCourseBox" class="teacher-box">
-      <div class="card">
-        <h2>เพิ่มรายวิชา</h2>
-
-        <label>ชื่อรายวิชา</label>
-        <input id="courseName" placeholder="เช่น 1/69 POL322/POL401 กระบวนการนโยบายสาธารณะ">
-
-        <label>ชื่อที่แสดงให้นักศึกษาเห็น</label>
-        <input id="courseDisplayName" placeholder="ถ้าเว้นว่าง จะใช้ชื่อรายวิชา">
-
-        <label>Google Sheet ID</label>
-        <input id="courseSheetId" placeholder="ใส่ภายหลังได้">
-
-        <label>ชื่อชีตคะแนน</label>
-        <input id="courseSheetName" placeholder="ใส่ภายหลังได้">
-
-        <button class="btn-main full" onclick="teacherCreateCourse()">เพิ่มรายวิชา</button>
-
-        <button class="btn-soft full" onclick="syncCoursesFromGoogleSheet()">
-          ซิงค์รายวิชาและนักศึกษาจาก Google Sheet
-        </button>
+  <div class="card">
+    <div class="zone-title">
+      <div>
+        <h2>ซิงค์รายวิชา</h2>
+        <p class="zone-subtitle">ซิงค์เฉพาะเมื่อมีการเพิ่มรายวิชาใหม่หรือแก้ไขข้อมูลจาก Google Sheet</p>
+      </div>
+      <div class="action-row">
+        <button class="btn-main" onclick="syncCoursesFromSheet()">ซิงค์รายวิชา</button>
+        <button class="btn-soft" onclick="clearSystemCache()">ล้าง Cache ระบบ</button>
       </div>
     </div>
+
+    <div class="teacher-zone soft">
+      <h3>คำแนะนำ</h3>
+      <div class="note">
+        ระบบจะไม่ซิงค์อัตโนมัติทุกครั้งที่นักศึกษาเปิดเว็บ เพื่อลดภาระการโหลดข้อมูล
+        หากมีการเพิ่มรายวิชา แก้ไขรายชื่อนักศึกษา หรือปรับคอลัมน์ชิ้นงานใน Google Sheet
+        ให้อาจารย์กดซิงค์รายวิชาด้วยตนเอง
+      </div>
+    </div>
+
+    <div id="teacherCourseSyncResult" class="mt-box"></div>
+    <div id="teacherCourseList" class="mt-box"></div>
+  </div>
+</div>
 
     <div id="teacherStudentBox" class="teacher-box">
       <div class="card">
