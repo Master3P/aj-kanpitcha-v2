@@ -4835,3 +4835,255 @@ function setValueIfExists(id, value){
   const el = document.getElementById(id);
   if(el) el.value = value;
 }
+
+// =====================================================
+// EMERGENCY FIX - Teacher tab forced open
+// แก้กดเมนูแล้วไม่แสดงหน้าแบบบังคับ
+// =====================================================
+
+window.teacherTab = function(id){
+  const target = document.getElementById(id);
+
+  if(!target){
+    alert(
+      'ไม่พบหน้าที่ต้องการเปิด: ' + id + '\n\n' +
+      'สาเหตุคือใน index.html ยังไม่มี <div id="' + id + '" class="teacher-box"> หรือชื่อ id ไม่ตรงกับปุ่มเมนู'
+    );
+    console.error('Missing teacher box:', id);
+    return;
+  }
+
+  // ซ่อนทุก teacher-box แบบบังคับ
+  document.querySelectorAll('#pageTeacherPanel .teacher-box').forEach(box => {
+    box.classList.remove('active');
+    box.classList.remove('force-active');
+
+    box.style.display = 'none';
+    box.style.visibility = 'hidden';
+    box.style.opacity = '0';
+    box.style.height = '0';
+    box.style.overflow = 'hidden';
+  });
+
+  // เปิดกล่องเป้าหมายแบบบังคับ
+  target.classList.add('active');
+  target.classList.add('force-active');
+
+  target.style.display = 'block';
+  target.style.visibility = 'visible';
+  target.style.opacity = '1';
+  target.style.height = 'calc(100vh - 74px)';
+  target.style.minHeight = 'calc(100vh - 74px)';
+  target.style.overflowY = 'auto';
+  target.style.overflowX = 'hidden';
+
+  // active menu
+  document.querySelectorAll('#pageTeacherPanel .teacher-tabs button').forEach(btn => {
+    btn.classList.remove('active-tab');
+
+    const click = btn.getAttribute('onclick') || '';
+    if(click.includes(id)){
+      btn.classList.add('active-tab');
+    }
+  });
+
+  // desktop ให้ sidebar แสดง
+  if(window.innerWidth > 900){
+    document.body.classList.remove('teacher-sidebar-hidden');
+  }else{
+    document.body.classList.add('teacher-sidebar-hidden');
+  }
+
+  // scroll ไปบนสุด
+  try {
+    target.scrollTop = 0;
+  } catch(e) {}
+
+  console.log('Opened teacher tab:', id);
+};
+
+
+// =====================================================
+// EMERGENCY FIX - Create missing teacher boxes if needed
+// ถ้ากล่องบางหน้าหาย ให้สร้างให้ก่อน เพื่อไม่ให้กดแล้วว่าง
+// =====================================================
+
+function ensureTeacherBox(id, title, subtitle, innerHtml){
+  if(document.getElementById(id)) return;
+
+  const panel = document.getElementById('pageTeacherPanel');
+  const container = panel ? panel.querySelector('.container') : null;
+
+  if(!container){
+    console.warn('Cannot create teacher box, container not found:', id);
+    return;
+  }
+
+  const box = document.createElement('div');
+  box.id = id;
+  box.className = 'teacher-box';
+
+  box.innerHTML = `
+    <div class="card">
+      <div class="zone-title">
+        <div>
+          <h2>${title}</h2>
+          <p class="zone-subtitle">${subtitle || ''}</p>
+        </div>
+      </div>
+      ${innerHtml || '<div class="student-empty">หน้านี้ถูกสร้างอัตโนมัติ กรุณาตรวจโค้ดเพิ่มเติม</div>'}
+    </div>
+  `;
+
+  container.appendChild(box);
+}
+
+
+// สร้างหน้าที่มักกดแล้วว่าง ถ้ายังไม่มีจริงใน index.html
+function ensureMissingTeacherPages(){
+  ensureTeacherBox(
+    'teacherSubmissionBox',
+    'งานที่นักศึกษาส่ง',
+    'ตรวจสอบไฟล์ล่าสุด สถานะการส่งงาน และเปิดไฟล์งานนักศึกษา',
+    `
+      <div class="file-form-grid">
+        <div>
+          <label>รายวิชา</label>
+          <select id="teacherSubmissionCourse"></select>
+        </div>
+        <div>
+          <label>ชิ้นงาน</label>
+          <select id="teacherSubmissionAssignment"></select>
+        </div>
+        <div>
+          <label>ค้นหารหัส / ชื่อ</label>
+          <input id="teacherSubmissionSearch" placeholder="พิมพ์เพื่อค้นหา">
+        </div>
+      </div>
+      <button class="btn-main full" onclick="teacherLoadSubmissionReport()">โหลดรายงานการส่งงาน</button>
+      <div id="teacherSubmissionReportBox" class="mt-box"></div>
+    `
+  );
+
+  ensureTeacherBox(
+    'teacherAIBox',
+    'AI ตรวจงาน',
+    'ใช้ AI ช่วยตรวจงานรายคน โดยอาจารย์ต้องตรวจทานและยืนยันคะแนนก่อนบันทึกจริง',
+    `
+      <div class="note">AI ตรวจงานใช้สำหรับตรวจทีละคน ทีละชิ้นงาน ไม่ใช่การตรวจพร้อมกันทั้งห้อง</div>
+      <hr>
+      <div class="teacher-two-col">
+        <div class="teacher-zone">
+          <h3>เลือกข้อมูลสำหรับตรวจ</h3>
+
+          <label>รายวิชา</label>
+          <select id="aiCourse" onchange="teacherLoadAIAssignments()"></select>
+
+          <label>ชิ้นงาน</label>
+          <select id="aiAssignment"></select>
+
+          <label>ค้นหานักศึกษา</label>
+          <input id="aiStudentSearch" placeholder="พิมพ์รหัสหรือชื่อ" oninput="teacherSearchStudentsForAI()">
+
+          <div id="aiStudentResults" class="mt-box"></div>
+
+          <label>นักศึกษาที่เลือก</label>
+          <input id="aiSelectedStudent" readonly placeholder="ยังไม่ได้เลือกนักศึกษา">
+          <input id="aiSelectedStudentId" type="hidden">
+        </div>
+
+        <div class="teacher-zone ai-zone">
+          <h3>เกณฑ์ตรวจและผลตรวจ</h3>
+
+          <label>เกณฑ์ตรวจเพิ่มเติม</label>
+          <textarea id="aiPageRubric" rows="5" placeholder="ระบุเกณฑ์ที่ต้องการให้ AI ใช้ตรวจงาน"></textarea>
+
+          <button class="btn-main full" onclick="teacherRunAIReviewFromAIPage()">AI ตรวจงานนักศึกษาที่เลือก</button>
+
+          <label>คะแนนที่ AI เสนอ / คะแนนที่อาจารย์ยืนยัน</label>
+          <input id="aiPageFinalScore" type="number" placeholder="คะแนนหลังตรวจ">
+
+          <label>คอมเมนต์จาก AI / อาจารย์แก้ไขได้</label>
+          <textarea id="aiPageCommentBox" rows="8" placeholder="ผลตรวจจาก AI จะแสดงที่นี่"></textarea>
+
+          <input id="aiPageReviewId" type="hidden">
+
+          <button class="btn-soft full" onclick="teacherConfirmAIReviewFromAIPage()">ยืนยันคะแนนจาก AI</button>
+        </div>
+      </div>
+    `
+  );
+
+  ensureTeacherBox(
+    'teacherDownloadBox',
+    'ไฟล์คำร้อง',
+    'เพิ่มไฟล์ PDF หรือแบบฟอร์มให้นักศึกษาดาวน์โหลด',
+    `
+      <div class="file-form-grid">
+        <div>
+          <label>ชื่อไฟล์</label>
+          <input id="downloadTitle" placeholder="เช่น คำร้องขอสอบ">
+        </div>
+
+        <div>
+          <label>รายละเอียด</label>
+          <input id="downloadDescription" placeholder="รายละเอียดเพิ่มเติม">
+        </div>
+
+        <div>
+          <label>แนบไฟล์</label>
+          <input id="downloadFile" type="file">
+        </div>
+      </div>
+
+      <button class="btn-main full" onclick="teacherUploadDownloadFile()">เพิ่มไฟล์คำร้อง</button>
+
+      <div id="teacherDownloadFilesBox" class="mt-box"></div>
+    `
+  );
+}
+
+
+// =====================================================
+// Prepare functions กันปุ่มเรียกแล้ว error
+// =====================================================
+
+window.teacherPrepareSubmissionPage = function(){
+  ensureMissingTeacherPages();
+
+  if(typeof copyCourseOptionsTo === 'function'){
+    copyCourseOptionsTo('teacherSubmissionCourse');
+  }
+
+  if(typeof teacherLoadSubmissionAssignments === 'function'){
+    teacherLoadSubmissionAssignments();
+  }
+};
+
+window.teacherPrepareAIPage = function(){
+  ensureMissingTeacherPages();
+
+  if(typeof copyCourseOptionsTo === 'function'){
+    copyCourseOptionsTo('aiCourse');
+  }
+
+  if(typeof teacherLoadAIAssignments === 'function'){
+    teacherLoadAIAssignments();
+  }
+};
+
+window.teacherPrepareDownloadFilesPage = function(){
+  ensureMissingTeacherPages();
+
+  if(typeof teacherLoadDownloadFiles === 'function'){
+    teacherLoadDownloadFiles();
+  }
+};
+
+
+// สร้างหน้าที่หายทันทีหลังโหลดเว็บ
+document.addEventListener('DOMContentLoaded', function(){
+  setTimeout(() => {
+    ensureMissingTeacherPages();
+  }, 500);
+});
