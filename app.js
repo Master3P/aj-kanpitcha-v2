@@ -4384,3 +4384,41 @@ async function teacherClearLearningRulesImage(){
     alert('ลบรูปภาพกติกาไม่สำเร็จ: ' + normalizeErrorMessage(err));
   }
 }
+
+// =====================================================
+// FIX - Teacher tab blank page guard
+// กันกดเมนูแล้วหน้าว่าง เพราะ id ไม่มีจริง
+// =====================================================
+
+teacherTab = function(id){
+  const target = document.getElementById(id);
+
+  if(!target){
+    toast('ยังไม่พบหน้าที่เรียกใช้: ' + id);
+    console.warn('Missing teacher tab id:', id);
+    return;
+  }
+
+  document.querySelectorAll('.teacher-box').forEach(x => {
+    x.classList.remove('active');
+  });
+
+  target.classList.add('active');
+
+  document.querySelectorAll('#pageTeacherPanel .teacher-tabs button').forEach(btn => {
+    btn.classList.remove('active-tab');
+
+    const click = btn.getAttribute('onclick') || '';
+    if(click.includes(id)){
+      btn.classList.add('active-tab');
+    }
+  });
+
+  if(window.innerWidth <= 900){
+    document.body.classList.add('teacher-sidebar-hidden');
+  }else{
+    document.body.classList.remove('teacher-sidebar-hidden');
+  }
+
+  target.scrollTo({ top:0, behavior:'smooth' });
+};
