@@ -2831,3 +2831,100 @@ html, body{
   scrollbar-width:thin !important;
   scrollbar-color:rgba(255,255,255,.45) rgba(255,255,255,.08) !important;
 }
+
+/* =====================================================
+   HARD FIX - Teacher sidebar scroll / menu not showing
+   บังคับให้เมนูซ้ายแสดงครบและเลื่อนในตัวเอง
+===================================================== */
+
+/* หน้าครูให้สูงเท่าจอ */
+#pageTeacherPanel{
+  height:calc(100vh - 74px) !important;
+  max-height:calc(100vh - 74px) !important;
+  overflow:hidden !important;
+}
+
+/* layout หลัก */
+#pageTeacherPanel .container{
+  height:100% !important;
+  max-height:100% !important;
+  overflow:hidden !important;
+  display:grid !important;
+  grid-template-columns:270px minmax(0,1fr) !important;
+  align-items:stretch !important;
+}
+
+/* sidebar ซ้าย */
+#pageTeacherPanel .teacher-tabs{
+  grid-column:1 !important;
+
+  height:100% !important;
+  max-height:100% !important;
+  min-height:0 !important;
+
+  overflow-y:scroll !important;
+  overflow-x:hidden !important;
+
+  display:flex !important;
+  flex-direction:column !important;
+  flex-wrap:nowrap !important;
+
+  padding:18px 14px 160px 14px !important;
+  margin:0 !important;
+  box-sizing:border-box !important;
+
+  position:relative !important;
+  top:auto !important;
+  left:auto !important;
+}
+
+/* ห้ามปุ่มในเมนูถูกย่อจนหาย */
+#pageTeacherPanel .teacher-tabs button,
+#pageTeacherPanel .teacher-tabs .btn-main{
+  flex:0 0 auto !important;
+  display:flex !important;
+  width:100% !important;
+  min-height:44px !important;
+  height:auto !important;
+  opacity:1 !important;
+  visibility:visible !important;
+}
+
+/* หัวข้อหมวดก็ห้ามย่อจนหาย */
+#pageTeacherPanel .side-section-title{
+  flex:0 0 auto !important;
+  display:block !important;
+  opacity:1 !important;
+  visibility:visible !important;
+}
+
+/* เติมพื้นที่ท้ายเมนู กันปุ่มล่างสุดถูกบัง */
+#pageTeacherPanel .teacher-tabs::after{
+  content:"";
+  display:block;
+  flex:0 0 120px;
+  height:120px;
+}
+
+/* พื้นที่ขวาเลื่อนแยก */
+#pageTeacherPanel .teacher-box{
+  grid-column:2 !important;
+  height:100% !important;
+  max-height:100% !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+}
+
+/* scrollbar ให้เห็นชัด */
+#pageTeacherPanel .teacher-tabs::-webkit-scrollbar{
+  width:10px !important;
+}
+
+#pageTeacherPanel .teacher-tabs::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.10) !important;
+}
+
+#pageTeacherPanel .teacher-tabs::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.50) !important;
+  border-radius:999px !important;
+}
