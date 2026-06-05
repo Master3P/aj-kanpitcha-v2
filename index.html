@@ -1081,6 +1081,177 @@
 </section>
   
   <script src="app.js"></script>
+
+  <script>
+function openTeacherPage(id){
+  const panel = document.getElementById('pageTeacherPanel');
+  if(!panel){
+    alert('ไม่พบ pageTeacherPanel');
+    return;
+  }
+
+  const container = panel.querySelector('.container') || panel;
+
+  let box = document.getElementById(id);
+
+  if(!box){
+    box = document.createElement('div');
+    box.id = id;
+    box.className = 'teacher-box';
+    container.appendChild(box);
+  }
+
+  if(id === 'teacherAIBox'){
+    box.innerHTML = `
+      <div class="card">
+        <h2>AI ตรวจงาน</h2>
+        <p>ใช้ AI ช่วยตรวจงานรายคน โดยอาจารย์ต้องตรวจทานและยืนยันคะแนนก่อนบันทึกจริง</p>
+
+        <label>รายวิชา</label>
+        <select id="aiCourse"></select>
+
+        <label>ชิ้นงาน</label>
+        <select id="aiAssignment"></select>
+
+        <label>ค้นหานักศึกษา</label>
+        <input id="aiStudentSearch" placeholder="พิมพ์รหัสหรือชื่อ">
+
+        <label>เกณฑ์ตรวจเพิ่มเติม</label>
+        <textarea id="aiPageRubric" rows="5" placeholder="ระบุเกณฑ์ที่ต้องการให้ AI ตรวจ"></textarea>
+
+        <button class="btn-main full" onclick="teacherRunAIReviewFromAIPage && teacherRunAIReviewFromAIPage()">AI ตรวจงาน</button>
+
+        <label>คะแนน</label>
+        <input id="aiPageFinalScore" type="number">
+
+        <label>คอมเมนต์</label>
+        <textarea id="aiPageCommentBox" rows="8"></textarea>
+
+        <button class="btn-soft full" onclick="teacherConfirmAIReviewFromAIPage && teacherConfirmAIReviewFromAIPage()">ยืนยันคะแนนจาก AI</button>
+      </div>
+    `;
+  }
+
+  if(id === 'teacherFilesBox'){
+    box.innerHTML = `
+      <div class="card">
+        <h2>เอกสารประกอบการเรียน</h2>
+        <p>เพิ่มไฟล์เอกสารให้นักศึกษาเปิดดู</p>
+
+        <label>รายวิชา</label>
+        <select id="teacherMaterialCourse"></select>
+
+        <label>ชื่อเอกสาร</label>
+        <input id="materialTitle" placeholder="ชื่อเอกสาร">
+
+        <label>แนบไฟล์</label>
+        <input id="materialFile" type="file">
+
+        <label>รายละเอียด</label>
+        <textarea id="materialDescription" rows="4"></textarea>
+
+        <button class="btn-main full" onclick="teacherUploadMaterial && teacherUploadMaterial()">เพิ่มเอกสาร</button>
+
+        <div id="teacherMaterialsBox" class="mt-box"></div>
+      </div>
+    `;
+  }
+
+  if(id === 'teacherDownloadBox'){
+    box.innerHTML = `
+      <div class="card">
+        <h2>ไฟล์คำร้อง</h2>
+        <p>เพิ่มไฟล์ PDF หรือแบบฟอร์มให้นักศึกษาดาวน์โหลด</p>
+
+        <label>ชื่อไฟล์</label>
+        <input id="downloadTitle" placeholder="เช่น คำร้องขอสอบ">
+
+        <label>รายละเอียด</label>
+        <input id="downloadDescription" placeholder="รายละเอียดเพิ่มเติม">
+
+        <label>แนบไฟล์</label>
+        <input id="downloadFile" type="file">
+
+        <button class="btn-main full" onclick="teacherUploadDownloadFile && teacherUploadDownloadFile()">เพิ่มไฟล์คำร้อง</button>
+
+        <div id="teacherDownloadFilesBox" class="mt-box"></div>
+      </div>
+    `;
+  }
+
+  if(id === 'teacherRulesBox'){
+    box.innerHTML = `
+      <div class="card">
+        <h2>กติกาการเรียน</h2>
+        <p>แก้ไขข้อความและภาพกติกาที่นักศึกษาเห็น</p>
+
+        <label>ข้อความกติกา</label>
+        <textarea id="teacherRuleText" rows="8"></textarea>
+
+        <label>เปลี่ยนภาพกติกา</label>
+        <input id="teacherRuleImage" type="file" accept="image/png,image/jpeg">
+
+        <button class="btn-main full" onclick="teacherSaveLearningRules && teacherSaveLearningRules()">บันทึกกติกา</button>
+        <button class="btn-soft full" onclick="teacherClearLearningRulesImage && teacherClearLearningRulesImage()">ลบรูปภาพกติกาเดิม</button>
+
+        <div id="teacherRulePreviewImage" class="mt-box"></div>
+        <div id="teacherRulePreviewText" class="mt-box"></div>
+      </div>
+    `;
+  }
+
+  if(id === 'teacherSettingsBox'){
+    box.innerHTML = `
+      <div class="card">
+        <h2>ตั้งค่าระบบ</h2>
+        <p>ตรวจสอบสถานะระบบและการเชื่อมต่อฐานข้อมูล</p>
+
+        <button class="btn-main" onclick="teacherLoadSystemHealth && teacherLoadSystemHealth()">ตรวจสอบระบบ</button>
+
+        <div id="systemHealthBox" class="mt-box"></div>
+      </div>
+    `;
+  }
+
+  if(id === 'teacherExportBox'){
+    box.innerHTML = `
+      <div class="card">
+        <h2>ส่งออกข้อมูล</h2>
+        <p>เลือกรายวิชาเพื่อส่งออกหรือพิมพ์รายงาน</p>
+
+        <label>รายวิชา</label>
+        <select id="exportCourse"></select>
+
+        <button class="btn-main" onclick="teacherLoadExportReport && teacherLoadExportReport()">โหลดรายงาน</button>
+        <button class="btn-soft" onclick="printSection && printSection('teacherExportResult')">พิมพ์ / บันทึก PDF</button>
+
+        <div id="teacherExportResult" class="mt-box"></div>
+      </div>
+    `;
+  }
+
+  document.querySelectorAll('#pageTeacherPanel .teacher-box').forEach(function(el){
+    el.style.display = 'none';
+    el.classList.remove('active');
+  });
+
+  box.style.display = 'block';
+  box.classList.add('active');
+
+  document.querySelectorAll('#pageTeacherPanel .teacher-tabs button').forEach(function(btn){
+    btn.classList.remove('active-tab');
+    const click = btn.getAttribute('onclick') || '';
+    if(click.includes(id)){
+      btn.classList.add('active-tab');
+    }
+  });
+
+  box.scrollTop = 0;
+}
+
+window.teacherTab = openTeacherPage;
+</script>
+  
   <script>
 /* =====================================================
    DIRECT FIX IN INDEX.HTML
