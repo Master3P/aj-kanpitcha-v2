@@ -3158,3 +3158,61 @@ html, body{
   border-color:rgba(255,255,255,.25) !important;
   box-shadow:inset 4px 0 0 rgba(255,255,255,.95) !important;
 }
+
+/* =====================================================
+   EMERGENCY FIX - Teacher tab forced visibility
+   แก้กดเมนูแล้วหน้าไม่ขึ้น / หน้าว่าง
+===================================================== */
+
+#pageTeacherPanel .teacher-box{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  height:0 !important;
+  overflow:hidden !important;
+}
+
+#pageTeacherPanel .teacher-box.active,
+#pageTeacherPanel .teacher-box.force-active{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  height:calc(100vh - 74px) !important;
+  min-height:calc(100vh - 74px) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  padding:24px 28px !important;
+}
+
+/* กัน content ด้านขวากว้างหาย */
+#pageTeacherPanel{
+  height:calc(100vh - 74px) !important;
+  overflow:hidden !important;
+}
+
+#pageTeacherPanel .container{
+  height:100% !important;
+  display:grid !important;
+  grid-template-columns:260px minmax(0,1fr) !important;
+  overflow:hidden !important;
+}
+
+#pageTeacherPanel .teacher-tabs{
+  grid-column:1 !important;
+  height:100% !important;
+  overflow-y:auto !important;
+}
+
+#pageTeacherPanel .teacher-box.active > .card,
+#pageTeacherPanel .teacher-box.force-active > .card{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+/* active menu */
+#pageTeacherPanel .teacher-tabs button.active-tab{
+  background:rgba(255,255,255,.22) !important;
+  border-color:rgba(255,255,255,.28) !important;
+  box-shadow:inset 4px 0 0 rgba(255,255,255,.95) !important;
+}
