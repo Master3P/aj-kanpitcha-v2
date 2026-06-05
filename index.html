@@ -500,11 +500,15 @@
 
   <button class="btn-main" onclick="teacherTab('teacherScoreBox');teacherPrepareScorePage()">✏️ กรอกคะแนนรายคน</button>
 
+  <button class="btn-main" onclick="teacherTab('teacherSubmissionBox');teacherPrepareSubmissionPage()">📁 งานที่นักศึกษาส่ง</button>
+
   <button class="btn-main" onclick="teacherTab('teacherAIBox');teacherPrepareAIPage()">🤖 AI ตรวจงาน</button>
 
-  <button class="btn-main" onclick="teacherTab('teacherFilesBox');teacherPrepareFilesPage()">📁 งาน/เอกสาร/ไฟล์คำร้อง</button>
-
   <button class="btn-main" onclick="teacherTab('teacherRulesBox');teacherLoadLearningRules()">📌 กติกาการเรียน</button>
+
+  <button class="btn-main" onclick="teacherTab('teacherFilesBox');teacherPrepareFilesPage()">📄 เอกสารประกอบการเรียน</button>
+
+  <button class="btn-main" onclick="teacherTab('teacherDownloadBox');teacherPrepareDownloadFilesPage()">🧾 ไฟล์คำร้อง</button>
 
   <button class="btn-main" onclick="teacherTab('teacherSettingsBox');teacherLoadSystemHealth()">⚙️ ตั้งค่า</button>
 
@@ -691,6 +695,39 @@
   </div>
 </div>
 
+    <div id="teacherSubmissionBox" class="teacher-box">
+  <div class="card">
+    <div class="zone-title">
+      <div>
+        <h2>งานที่นักศึกษาส่ง</h2>
+        <p class="zone-subtitle">ตรวจสอบไฟล์ล่าสุด สถานะส่งงาน และพิมพ์รายงานได้</p>
+      </div>
+      <button class="btn-soft" onclick="teacherLoadSubmissionReport()">โหลดรายงาน</button>
+    </div>
+
+    <div class="file-form-grid">
+      <div>
+        <label>รายวิชา</label>
+        <select id="teacherSubmissionCourse" onchange="teacherLoadSubmissionAssignments()"></select>
+      </div>
+
+      <div>
+        <label>ชิ้นงาน</label>
+        <select id="teacherSubmissionAssignment"></select>
+      </div>
+
+      <div>
+        <label>ค้นหารหัส / ชื่อ</label>
+        <input id="teacherSubmissionSearch" placeholder="พิมพ์เพื่อค้นหา">
+      </div>
+    </div>
+
+    <button class="btn-main full" onclick="teacherLoadSubmissionReport()">โหลดรายงานการส่งงาน</button>
+
+    <div id="teacherSubmissionReportBox" class="mt-box"></div>
+  </div>
+</div>
+    
     <div id="teacherScoreBox" class="teacher-box">
   <div class="card">
 
@@ -931,6 +968,39 @@
   </div>
 </div>
 
+      <div id="teacherDownloadBox" class="teacher-box">
+  <div class="card">
+    <div class="zone-title">
+      <div>
+        <h2>ไฟล์คำร้อง</h2>
+        <p class="zone-subtitle">เพิ่มไฟล์ PDF หรือแบบฟอร์มให้นักศึกษาดาวน์โหลด</p>
+      </div>
+      <button class="btn-soft" onclick="teacherLoadDownloadFiles()">โหลดรายการ</button>
+    </div>
+
+    <div class="file-form-grid">
+      <div>
+        <label>ชื่อไฟล์</label>
+        <input id="downloadTitle" placeholder="เช่น คำร้องขอสอบ">
+      </div>
+
+      <div>
+        <label>รายละเอียด</label>
+        <input id="downloadDescription" placeholder="รายละเอียดเพิ่มเติม">
+      </div>
+
+      <div>
+        <label>แนบไฟล์</label>
+        <input id="downloadFile" type="file">
+      </div>
+    </div>
+
+    <button class="btn-main full" onclick="teacherUploadDownloadFile()">เพิ่มไฟล์คำร้อง</button>
+
+    <div id="teacherDownloadFilesBox" class="mt-box"></div>
+  </div>
+</div>
+      
     <div id="teacherSettingsBox" class="teacher-box">
   <div class="card">
     <h2>ตั้งค่าระบบ</h2>
