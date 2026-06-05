@@ -500,6 +500,8 @@
 
   <button class="btn-main" onclick="teacherTab('teacherScoreBox');teacherPrepareScorePage()">✏️ กรอกคะแนนรายคน</button>
 
+  <button class="btn-main" onclick="teacherTab('teacherAIBox');teacherPrepareAIPage()">🤖 AI ตรวจงาน</button>
+
   <button class="btn-main" onclick="teacherTab('teacherFilesBox');teacherPrepareFilesPage()">📁 งาน/เอกสาร/ไฟล์คำร้อง</button>
 
   <button class="btn-main" onclick="teacherTab('teacherRulesBox');teacherLoadLearningRules()">📌 กติกาการเรียน</button>
@@ -766,30 +768,6 @@
         <button class="btn-main full" onclick="teacherSaveScore()">บันทึกคะแนน</button>
       </div>
 
-      <div class="teacher-zone ai-zone">
-        <h3>AI ตรวจงานรายคน</h3>
-        <p class="zone-subtitle">ใช้ AI ช่วยตรวจไฟล์งานของนักศึกษาที่เลือก แล้วอาจารย์ยืนยันคะแนนก่อนบันทึกจริง</p>
-
-        <label>เกณฑ์ตรวจเพิ่มเติม</label>
-        <textarea id="aiRubric" rows="5" placeholder="เช่น ตรวจความครบถ้วน ความเข้าใจ การวิเคราะห์ การจัดรูปแบบ และการอ้างอิง"></textarea>
-
-        <button class="btn-main full" onclick="teacherRunAIReview()">AI ตรวจงานนักศึกษาที่เลือก</button>
-
-        <label>คะแนนที่ AI เสนอ / คะแนนที่อาจารย์ยืนยัน</label>
-        <input id="aiFinalScore" type="number" placeholder="คะแนนหลังตรวจ">
-
-        <label>คอมเมนต์จาก AI / อาจารย์แก้ไขได้</label>
-        <textarea id="aiCommentBox" rows="8" placeholder="ผลตรวจจาก AI จะแสดงที่นี่ และอาจารย์แก้ไขได้"></textarea>
-
-        <input id="aiReviewId" type="hidden">
-
-        <button class="btn-soft full" onclick="teacherConfirmAIReview()">ยืนยันคะแนนจาก AI</button>
-      </div>
-
-    </div>
-
-    <hr>
-
     <!-- โซนที่ 4: รายงานคะแนน -->
     <div class="teacher-zone">
       <div class="zone-title">
@@ -805,6 +783,68 @@
       </div>
 
       <div id="teacherScoreReportBox" class="mt-box"></div>
+    </div>
+
+  </div>
+</div>
+
+    <div id="teacherAIBox" class="teacher-box">
+  <div class="card">
+
+    <div class="zone-title">
+      <div>
+        <h2>AI ตรวจงาน</h2>
+        <p class="zone-subtitle">ใช้ AI ช่วยตรวจงานรายคน โดยอาจารย์ต้องตรวจทานและยืนยันคะแนนก่อนบันทึกจริง</p>
+      </div>
+      <button class="btn-soft" onclick="teacherPrepareAIPage()">รีเฟรช</button>
+    </div>
+
+    <div class="note">
+      หมายเหตุ: AI ตรวจงานออกแบบสำหรับให้อาจารย์ตรวจทีละคน ทีละชิ้นงาน ไม่ใช่ระบบตรวจพร้อมกันทั้งห้อง และคะแนนจะไม่ลง Sheet จนกว่าอาจารย์ยืนยัน
+    </div>
+
+    <hr>
+
+    <div class="teacher-two-col">
+
+      <div class="teacher-zone">
+        <h3>เลือกข้อมูลสำหรับตรวจ</h3>
+
+        <label>รายวิชา</label>
+        <select id="aiCourse" onchange="teacherLoadAIAssignments()"></select>
+
+        <label>ชิ้นงาน</label>
+        <select id="aiAssignment"></select>
+
+        <label>ค้นหานักศึกษา</label>
+        <input id="aiStudentSearch" placeholder="พิมพ์รหัสหรือชื่อ" oninput="teacherSearchStudentsForAI()">
+
+        <div id="aiStudentResults" class="mt-box"></div>
+
+        <label>นักศึกษาที่เลือก</label>
+        <input id="aiSelectedStudent" readonly placeholder="ยังไม่ได้เลือกนักศึกษา">
+        <input id="aiSelectedStudentId" type="hidden">
+      </div>
+
+      <div class="teacher-zone ai-zone">
+        <h3>เกณฑ์ตรวจและผลตรวจ</h3>
+
+        <label>เกณฑ์ตรวจเพิ่มเติม</label>
+        <textarea id="aiPageRubric" rows="5" placeholder="เช่น ตรวจความครบถ้วน ความเข้าใจ การวิเคราะห์ การจัดรูปแบบ และการอ้างอิง"></textarea>
+
+        <button class="btn-main full" onclick="teacherRunAIReviewFromAIPage()">AI ตรวจงานนักศึกษาที่เลือก</button>
+
+        <label>คะแนนที่ AI เสนอ / คะแนนที่อาจารย์ยืนยัน</label>
+        <input id="aiPageFinalScore" type="number" placeholder="คะแนนหลังตรวจ">
+
+        <label>คอมเมนต์จาก AI / อาจารย์แก้ไขได้</label>
+        <textarea id="aiPageCommentBox" rows="8" placeholder="ผลตรวจจาก AI จะแสดงที่นี่ และอาจารย์แก้ไขได้"></textarea>
+
+        <input id="aiPageReviewId" type="hidden">
+
+        <button class="btn-soft full" onclick="teacherConfirmAIReviewFromAIPage()">ยืนยันคะแนนจาก AI</button>
+      </div>
+
     </div>
 
   </div>
