@@ -484,34 +484,31 @@
       <button class="btn-soft" onclick="teacherLogout()">ออกจากระบบ</button>
     </div>
 
-<div class="teacher-tabs">
-  <div class="side-section-title">ภาพรวม</div>
-  <button class="btn-main" onclick="teacherTab('teacherDashboardBox');teacherPrepareDashboard()">หน้าหลัก</button>
-  <button class="btn-main" onclick="teacherTab('teacherCourseBox')">ซิงค์รายวิชา</button>
+<div class="teacher-tabs old-style-tabs">
 
-  <div class="side-section-title">ข้อมูลผู้เรียน</div>
-  <button class="btn-main" onclick="teacherTab('teacherStudentBox')">รายชื่อนักศึกษา</button>
+  <button class="btn-main" onclick="teacherTab('teacherDashboardBox');teacherPrepareDashboard()">🏠 หน้าหลัก</button>
 
-  <div class="side-section-title">การเรียนการสอน</div>
-  <button class="btn-main" onclick="teacherTab('teacherAttendanceBox')">เปิดเช็คชื่อ</button>
-  <button class="btn-main" onclick="teacherTab('teacherAssignmentBox')">จัดการชิ้นงาน</button>
-  <button class="btn-main" onclick="teacherTab('teacherLeaveBox')">ใบลาเรียน</button>
+  <button class="btn-main" onclick="teacherTab('teacherCourseBox')">🔄 ซิงค์รายวิชา</button>
 
-  <div class="side-section-title">คะแนนและงานส่ง</div>
-  <button class="btn-main" onclick="teacherTab('teacherScoreBox');teacherPrepareScorePage()">กรอกคะแนน</button>
-  <button class="btn-main" onclick="teacherTab('teacherSubmissionBox')">งานที่นักศึกษาส่ง</button>
-  <button class="btn-main" onclick="teacherTab('teacherAIBox')">AI ตรวจงาน</button>
-  <button class="btn-main" onclick="teacherTab('teacherSpecialScoreBox')">ประวัติคะแนนพิเศษ</button>
+  <button class="btn-main" onclick="teacherTab('teacherStudentBox')">👥 รายชื่อนักศึกษา</button>
 
-  <div class="side-section-title">เอกสารและกติกา</div>
-  <button class="btn-main" onclick="teacherTab('teacherRulesBox');teacherLoadLearningRules()">กติกาการเรียน</button>
-  <button class="btn-main" onclick="teacherTab('teacherFilesBox');teacherPrepareFilesPage()">เอกสารประกอบการเรียน</button>
-  <button class="btn-main" onclick="teacherTab('teacherDownloadBox')">ไฟล์คำร้อง</button>
+  <button class="btn-main" onclick="teacherTab('teacherAttendanceBox')">📋 เปิดเช็คชื่อ</button>
 
-  <div class="side-section-title">ระบบ</div>
-  <button class="btn-main" onclick="teacherTab('teacherSettingsBox');teacherLoadSystemHealth()">ตั้งค่า</button>
-  <button class="btn-main" onclick="teacherTab('teacherExportBox');teacherPrepareExportPage()">ส่งออกข้อมูล</button>
-  <button class="btn-main" onclick="teacherLogout()">ออกจากระบบ</button>
+  <button class="btn-main" onclick="teacherTab('teacherAssignmentBox')">📝 จัดการชิ้นงาน</button>
+
+  <button class="btn-main" onclick="teacherTab('teacherLeaveBox')">📅 ใบลาเรียน</button>
+
+  <button class="btn-main" onclick="teacherTab('teacherScoreBox');teacherPrepareScorePage()">✏️ กรอกคะแนนรายคน</button>
+
+  <button class="btn-main" onclick="teacherTab('teacherFilesBox');teacherPrepareFilesPage()">📁 งาน/เอกสาร/ไฟล์คำร้อง</button>
+
+  <button class="btn-main" onclick="teacherTab('teacherRulesBox');teacherLoadLearningRules()">📌 กติกาการเรียน</button>
+
+  <button class="btn-main" onclick="teacherTab('teacherSettingsBox');teacherLoadSystemHealth()">⚙️ ตั้งค่า</button>
+
+  <button class="btn-main" onclick="teacherTab('teacherExportBox');teacherPrepareExportPage()">📤 ส่งออกข้อมูล</button>
+
+  <button class="btn-main logout-btn" onclick="teacherLogout()">↪ ออกจากระบบ</button>
 
 </div>
     
