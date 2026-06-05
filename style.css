@@ -3123,3 +3123,38 @@ html, body{
     padding:78px 16px 24px 16px !important;
   }
 }
+
+/* =====================================================
+   URGENT FIX - Teacher tabs display correctly
+   แก้กดเมนูแล้วหน้าว่าง / หน้าไม่ขึ้น
+===================================================== */
+
+#pageTeacherPanel .teacher-box{
+  display:none !important;
+}
+
+#pageTeacherPanel .teacher-box.active{
+  display:block !important;
+}
+
+/* ป้องกันหน้าว่างเพราะความสูงผิด */
+#pageTeacherPanel .teacher-box.active{
+  min-height:calc(100vh - 74px) !important;
+}
+
+/* ทำ sidebar แบบระบบเดิม ไม่เว้นช่องเยอะ */
+#pageTeacherPanel .teacher-tabs.old-style-tabs{
+  gap:8px !important;
+  padding-bottom:70px !important;
+}
+
+#pageTeacherPanel .teacher-tabs.old-style-tabs button{
+  margin:0 !important;
+}
+
+/* แยกปุ่ม active ให้ชัด */
+#pageTeacherPanel .teacher-tabs button.active-tab{
+  background:rgba(255,255,255,.22) !important;
+  border-color:rgba(255,255,255,.25) !important;
+  box-shadow:inset 4px 0 0 rgba(255,255,255,.95) !important;
+}
