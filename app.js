@@ -4422,3 +4422,176 @@ teacherTab = function(id){
 
   target.scrollTo({ top:0, behavior:'smooth' });
 };
+
+// =====================================================
+// SEPARATE AI PAGE
+// แยกหน้า AI ตรวจงานออกจากหน้ากรอกคะแนนรายคน
+// =====================================================
+
+function teacherPrepareAIPage(){
+  const courseSelect = document.getElementById('aiCourse');
+  const oldScoreCourse = document.getElementById('teacherScoreCourse');
+
+  if(courseSelect && oldScoreCourse){
+    courseSelect.innerHTML = oldScoreCourse.innerHTML;
+
+    if(oldScoreCourse.value){
+      courseSelect.value = oldScoreCourse.value;
+    }
+  }
+
+  teacherLoadAIAssignments();
+}
+
+function teacherLoadAIAssignments(){
+  const aiCourse = document.getElementById('aiCourse');
+  const aiAssignment = document.getElementById('aiAssignment');
+
+  const oldScoreCourse = document.getElementById('teacherScoreCourse');
+  const oldScoreAssignment = document.getElementById('teacherScoreAssignment');
+
+  if(!aiCourse || !aiAssignment) return;
+
+  // ถ้าหน้าคะแนนมี select รายวิชา/ชิ้นงานอยู่แล้ว ให้ใช้ logic เดิมช่วยโหลด
+  if(oldScoreCourse){
+    oldScoreCourse.value = aiCourse.value;
+  }
+
+  if(typeof teacherLoadScoreAssignments === 'function'){
+    teacherLoadScoreAssignments();
+  }
+
+  setTimeout(() => {
+    if(oldScoreAssignment){
+      aiAssignment.innerHTML = oldScoreAssignment.innerHTML;
+      if(oldScoreAssignment.value){
+        aiAssignment.value = oldScoreAssignment.value;
+      }
+    }
+  }, 300);
+}
+
+function teacherSearchStudentsForAI(){
+  const q = val('aiStudentSearch').toLowerCase().trim();
+  const box = document.getElementById('aiStudentResults');
+
+  if(!box) return;
+
+  if(!q){
+    box.innerHTML = '';
+    return;
+  }
+
+  // ใช้ข้อมูลนักศึกษาจากตัวแปรเดิม ถ้ามี
+  const students =
+    window.TEACHER_STUDENTS ||
+    window.teacherStudents ||
+    window.CURRENT_STUDENTS ||
+    [];
+
+  if(!students.length){
+    box.innerHTML = '<div class="student-empty">ยังไม่มีข้อมูลนักศึกษา กรุณาโหลดรายชื่อนักศึกษาหรือซิงค์รายวิชาก่อน</div>';
+    return;
+  }
+
+  const found = students.filter(s => {
+    const id = String(s.student_id || s.id || '').toLowerCase();
+    const name = String(s.full_name || s.name || '').toLowerCase();
+    return id.includes(q) || name.includes(q);
+  }).slice(0, 10);
+
+  if(!found.length){
+    box.innerHTML = '<div class="student-empty">ไม่พบนักศึกษา</div>';
+    return;
+  }
+
+  box.innerHTML = found.map(s => {
+    const sid = s.student_id || s.id || '';
+    const name = s.full_name || s.name || '';
+
+    return `
+      <button class="btn-soft small" onclick="selectAIStudent('${esc(sid)}','${esc(name)}')">
+        ${esc(sid)} ${esc(name)}
+      </button>
+    `;
+  }).join('');
+}
+
+function selectAIStudent(studentId, fullName){
+  const idEl = document.getElementById('aiSelectedStudentId');
+  const nameEl = document.getElementById('aiSelectedStudent');
+  const searchEl = document.getElementById('aiStudentSearch');
+  const resultsEl = document.getElementById('aiStudentResults');
+
+  if(idEl) idEl.value = studentId;
+  if(nameEl) nameEl.value = `${studentId} ${fullName}`;
+
+  if(searchEl) searchEl.value = '';
+
+  if(resultsEl){
+    resultsEl.innerHTML = `
+      <div class="student-row">
+        <div>
+          <b>${esc(studentId)} ${esc(fullName)}</b><br>
+          <small>เลือกนักศึกษาคนนี้สำหรับ AI ตรวจงานแล้ว</small>
+        </div>
+        <span class="status-pill">เลือกแล้ว</span>
+      </div>
+    `;
+  }
+}
+
+async function teacherRunAIReviewFromAIPage(){
+  const courseId = val('aiCourse');
+  const assignment = val('aiAssignment');
+  const studentId = val('aiSelectedStudentId');
+  const rubric = val('aiPageRubric');
+
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+  if(!assignment) return toast('กรุณาเลือกชิ้นงาน');
+  if(!studentId) return toast('กรุณาเลือกนักศึกษา');
+
+  // ส่งค่าไปยัง id เดิมที่ฟังก์ชัน AI เดิมใช้
+  setValueIfExists('teacherScoreCourse', courseId);
+  setValueIfExists('teacherScoreAssignment', assignment);
+  setValueIfExists('selectedScoreStudentId', studentId);
+  setValueIfExists('aiRubric', rubric);
+
+  if(typeof teacherRunAIReview !== 'function'){
+    return toast('ยังไม่พบฟังก์ชัน AI ตรวจงานเดิม');
+  }
+
+  await teacherRunAIReview();
+
+  // ดึงผลจากช่องเดิมมาแสดงในหน้า AI แยก
+  setTimeout(() => {
+    const oldScore = document.getElementById('aiFinalScore');
+    const oldComment = document.getElementById('aiCommentBox');
+    const oldReview = document.getElementById('aiReviewId');
+
+    if(oldScore) setValueIfExists('aiPageFinalScore', oldScore.value);
+    if(oldComment) setValueIfExists('aiPageCommentBox', oldComment.value);
+    if(oldReview) setValueIfExists('aiPageReviewId', oldReview.value);
+  }, 500);
+}
+
+async function teacherConfirmAIReviewFromAIPage(){
+  const score = val('aiPageFinalScore');
+  const comment = val('aiPageCommentBox');
+  const reviewId = val('aiPageReviewId');
+
+  setValueIfExists('aiFinalScore', score);
+  setValueIfExists('aiCommentBox', comment);
+  setValueIfExists('aiReviewId', reviewId);
+
+  if(typeof teacherConfirmAIReview !== 'function'){
+    return toast('ยังไม่พบฟังก์ชันยืนยันคะแนน AI เดิม');
+  }
+
+  await teacherConfirmAIReview();
+}
+
+function setValueIfExists(id, value){
+  const el = document.getElementById(id);
+  if(el) el.value = value;
+}
