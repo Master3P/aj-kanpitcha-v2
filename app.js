@@ -4595,3 +4595,243 @@ function setValueIfExists(id, value){
   const el = document.getElementById(id);
   if(el) el.value = value;
 }
+
+// =====================================================
+// URGENT FIX - Teacher pages / separated menus
+// แก้ AI, งานส่ง, ไฟล์คำร้อง, กติกา, ตั้งค่า, ส่งออก กดแล้วไม่ขึ้น
+// =====================================================
+
+function teacherTab(id){
+  const target = document.getElementById(id);
+
+  if(!target){
+    alert('ยังไม่พบหน้าที่เรียกใช้: ' + id + '\nกรุณาตรวจว่า index.html มี div id="' + id + '" หรือไม่');
+    console.warn('Missing teacher tab id:', id);
+    return;
+  }
+
+  document.querySelectorAll('#pageTeacherPanel .teacher-box').forEach(box => {
+    box.classList.remove('active');
+  });
+
+  target.classList.add('active');
+
+  document.querySelectorAll('#pageTeacherPanel .teacher-tabs button').forEach(btn => {
+    btn.classList.remove('active-tab');
+    const click = btn.getAttribute('onclick') || '';
+    if(click.includes(id)){
+      btn.classList.add('active-tab');
+    }
+  });
+
+  if(window.innerWidth <= 900){
+    document.body.classList.add('teacher-sidebar-hidden');
+  }else{
+    document.body.classList.remove('teacher-sidebar-hidden');
+  }
+
+  try {
+    target.scrollTo({ top:0, behavior:'smooth' });
+  } catch(e) {}
+}
+
+
+// -----------------------------------------------------
+// Prepare submission page
+// -----------------------------------------------------
+function teacherPrepareSubmissionPage(){
+  copyCourseOptionsTo('teacherSubmissionCourse');
+  teacherLoadSubmissionAssignments();
+}
+
+function teacherLoadSubmissionAssignments(){
+  const courseId = val('teacherSubmissionCourse');
+  const target = document.getElementById('teacherSubmissionAssignment');
+
+  if(!target) return;
+
+  const source =
+    document.getElementById('teacherScoreAssignment') ||
+    document.getElementById('teacherAssignmentSelect') ||
+    document.getElementById('aiAssignment');
+
+  if(source && source.innerHTML.trim()){
+    target.innerHTML = source.innerHTML;
+    return;
+  }
+
+  target.innerHTML = '<option value="">กรุณาโหลดชิ้นงานก่อน</option>';
+}
+
+
+// -----------------------------------------------------
+// Prepare AI page
+// -----------------------------------------------------
+function teacherPrepareAIPage(){
+  copyCourseOptionsTo('aiCourse');
+
+  const scoreCourse = document.getElementById('teacherScoreCourse');
+  const aiCourse = document.getElementById('aiCourse');
+
+  if(scoreCourse && aiCourse && scoreCourse.value){
+    aiCourse.value = scoreCourse.value;
+  }
+
+  teacherLoadAIAssignments();
+}
+
+function teacherLoadAIAssignments(){
+  const aiAssignment = document.getElementById('aiAssignment');
+  if(!aiAssignment) return;
+
+  const scoreAssignment = document.getElementById('teacherScoreAssignment');
+
+  if(scoreAssignment && scoreAssignment.innerHTML.trim()){
+    aiAssignment.innerHTML = scoreAssignment.innerHTML;
+    return;
+  }
+
+  aiAssignment.innerHTML = '<option value="">กรุณาโหลดชิ้นงานก่อน</option>';
+}
+
+function teacherSearchStudentsForAI(){
+  const q = val('aiStudentSearch').toLowerCase().trim();
+  const box = document.getElementById('aiStudentResults');
+
+  if(!box) return;
+
+  if(!q){
+    box.innerHTML = '';
+    return;
+  }
+
+  const oldSearch = document.getElementById('scoreStudentSearch');
+  if(oldSearch){
+    oldSearch.value = q;
+  }
+
+  if(typeof teacherSearchScoreStudents === 'function'){
+    teacherSearchScoreStudents();
+  }
+
+  const source =
+    document.getElementById('scoreStudentResults') ||
+    document.getElementById('studentSearchResults') ||
+    document.getElementById('teacherStudentSearchResults');
+
+  if(source && source.innerHTML.trim()){
+    box.innerHTML = source.innerHTML;
+  }else{
+    box.innerHTML = '<div class="student-empty">พิมพ์รหัสหรือชื่อ แล้วเลือกนักศึกษาจากผลค้นหา</div>';
+  }
+}
+
+function selectAIStudent(studentId, fullName){
+  setValueIfExists('aiSelectedStudentId', studentId);
+  setValueIfExists('aiSelectedStudent', studentId + ' ' + fullName);
+
+  const box = document.getElementById('aiStudentResults');
+  if(box){
+    box.innerHTML = `
+      <div class="student-row">
+        <div>
+          <b>${esc(studentId)} ${esc(fullName)}</b><br>
+          <small>เลือกนักศึกษาคนนี้สำหรับ AI ตรวจงานแล้ว</small>
+        </div>
+      </div>
+    `;
+  }
+}
+
+async function teacherRunAIReviewFromAIPage(){
+  const courseId = val('aiCourse');
+  const assignment = val('aiAssignment');
+  const studentId = val('aiSelectedStudentId');
+  const rubric = val('aiPageRubric');
+
+  if(!courseId) return toast('กรุณาเลือกรายวิชา');
+  if(!assignment) return toast('กรุณาเลือกชิ้นงาน');
+  if(!studentId) return toast('กรุณาเลือกนักศึกษา');
+
+  setValueIfExists('teacherScoreCourse', courseId);
+  setValueIfExists('teacherScoreAssignment', assignment);
+  setValueIfExists('selectedScoreStudentId', studentId);
+  setValueIfExists('aiRubric', rubric);
+
+  if(typeof teacherRunAIReview !== 'function'){
+    return toast('ยังไม่พบฟังก์ชัน AI ตรวจงานเดิม');
+  }
+
+  await teacherRunAIReview();
+
+  setTimeout(() => {
+    const oldScore = document.getElementById('aiFinalScore');
+    const oldComment = document.getElementById('aiCommentBox');
+    const oldReview = document.getElementById('aiReviewId');
+
+    if(oldScore) setValueIfExists('aiPageFinalScore', oldScore.value);
+    if(oldComment) setValueIfExists('aiPageCommentBox', oldComment.value);
+    if(oldReview) setValueIfExists('aiPageReviewId', oldReview.value);
+  }, 500);
+}
+
+async function teacherConfirmAIReviewFromAIPage(){
+  setValueIfExists('aiFinalScore', val('aiPageFinalScore'));
+  setValueIfExists('aiCommentBox', val('aiPageCommentBox'));
+  setValueIfExists('aiReviewId', val('aiPageReviewId'));
+
+  if(typeof teacherConfirmAIReview !== 'function'){
+    return toast('ยังไม่พบฟังก์ชันยืนยันคะแนน AI เดิม');
+  }
+
+  await teacherConfirmAIReview();
+}
+
+
+// -----------------------------------------------------
+// Download files page
+// -----------------------------------------------------
+function teacherPrepareDownloadFilesPage(){
+  if(typeof teacherLoadDownloadFiles === 'function'){
+    teacherLoadDownloadFiles();
+  }
+}
+
+
+// -----------------------------------------------------
+// Course option helper
+// -----------------------------------------------------
+function copyCourseOptionsTo(targetId){
+  const target = document.getElementById(targetId);
+  if(!target) return;
+
+  const sources = [
+    'teacherScoreCourse',
+    'teacherSubmissionCourse',
+    'teacherMaterialCourse',
+    'teacherLeaveCourse',
+    'teacherDashboardCourse',
+    'teacherAssignmentCourse'
+  ];
+
+  for(const id of sources){
+    const src = document.getElementById(id);
+
+    if(src && src.innerHTML.trim()){
+      target.innerHTML = src.innerHTML;
+
+      if(src.value){
+        target.value = src.value;
+      }
+
+      return;
+    }
+  }
+
+  target.innerHTML = '<option value="">ยังไม่มีรายวิชา</option>';
+}
+
+function setValueIfExists(id, value){
+  const el = document.getElementById(id);
+  if(el) el.value = value;
+}
