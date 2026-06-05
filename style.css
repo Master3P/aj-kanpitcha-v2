@@ -2770,3 +2770,64 @@ html, body{
     grid-template-columns:1fr !important;
   }
 }
+
+/* =====================================================
+   FIX - Teacher Sidebar not fully scrollable
+   แก้เมนูซ้ายแสดงไม่ครบ / เลื่อนลงไม่สุด
+===================================================== */
+
+/* ให้ sidebar สูงพอดีกับหน้าจอ และเลื่อนภายในตัวเอง */
+#pageTeacherPanel .teacher-tabs{
+  height:calc(100vh - 74px) !important;
+  max-height:calc(100vh - 74px) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  padding-bottom:120px !important;
+  box-sizing:border-box !important;
+}
+
+/* กันเมนูล่างถูกตัด */
+#pageTeacherPanel .teacher-tabs::after{
+  content:"";
+  display:block;
+  height:80px;
+  flex:0 0 80px;
+}
+
+/* ให้ container ฝั่งอาจารย์ไม่ตัด sidebar */
+#pageTeacherPanel .container{
+  height:calc(100vh - 74px) !important;
+  overflow:hidden !important;
+}
+
+/* ให้เฉพาะเนื้อหาขวาเลื่อน ส่วน sidebar เลื่อนแยก */
+#pageTeacherPanel .teacher-box{
+  height:calc(100vh - 74px) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+}
+
+/* ทำ scrollbar ของ sidebar ให้เห็นชัดขึ้น */
+#pageTeacherPanel .teacher-tabs::-webkit-scrollbar{
+  width:10px !important;
+}
+
+#pageTeacherPanel .teacher-tabs::-webkit-scrollbar-track{
+  background:rgba(255,255,255,.08) !important;
+  border-radius:999px !important;
+}
+
+#pageTeacherPanel .teacher-tabs::-webkit-scrollbar-thumb{
+  background:rgba(255,255,255,.45) !important;
+  border-radius:999px !important;
+}
+
+#pageTeacherPanel .teacher-tabs::-webkit-scrollbar-thumb:hover{
+  background:rgba(255,255,255,.65) !important;
+}
+
+/* Firefox */
+#pageTeacherPanel .teacher-tabs{
+  scrollbar-width:thin !important;
+  scrollbar-color:rgba(255,255,255,.45) rgba(255,255,255,.08) !important;
+}
