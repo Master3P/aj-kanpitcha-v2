@@ -3631,3 +3631,110 @@ html, body{
   border-color:rgba(255,255,255,.28) !important;
   box-shadow:inset 4px 0 0 rgba(255,255,255,.95) !important;
 }
+
+/* =====================================================
+   EMERGENCY RESTORE
+   ซ่อน sidebar อาจารย์เมื่อไม่ได้อยู่หน้าอาจารย์
+   และยกเลิก fixed layout ที่ทำให้ระบบพัง
+===================================================== */
+
+/* ทุกหน้า page ปกติให้ซ่อนก่อน */
+.page{
+  display:none;
+}
+
+/* แสดงเฉพาะ page ที่ active */
+.page.active{
+  display:block;
+}
+
+/* ถ้า pageTeacherPanel ไม่ active ห้ามแสดงเมนูอาจารย์เด็ดขาด */
+#pageTeacherPanel:not(.active),
+#pageTeacherPanel:not(.active) .teacher-tabs,
+#pageTeacherPanel:not(.active) .teacher-box{
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+
+/* เมื่ออยู่หน้าอาจารย์จริง ค่อยแสดง */
+#pageTeacherPanel.active{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  pointer-events:auto !important;
+  height:calc(100vh - 74px) !important;
+  overflow:hidden !important;
+}
+
+/* ยกเลิก sidebar fixed ที่ทำให้ไปทับหน้าอื่น */
+#pageTeacherPanel.active .container{
+  display:grid !important;
+  grid-template-columns:260px minmax(0,1fr) !important;
+  width:100% !important;
+  max-width:none !important;
+  height:calc(100vh - 74px) !important;
+  margin:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+}
+
+/* sidebar อาจารย์อยู่เฉพาะในหน้าอาจารย์ */
+#pageTeacherPanel.active .teacher-tabs{
+  position:relative !important;
+  left:auto !important;
+  top:auto !important;
+  width:260px !important;
+  height:calc(100vh - 74px) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  display:flex !important;
+  flex-direction:column !important;
+  z-index:1 !important;
+}
+
+/* กล่องด้านขวา */
+#pageTeacherPanel.active .teacher-box{
+  position:relative !important;
+  left:auto !important;
+  top:auto !important;
+  right:auto !important;
+  bottom:auto !important;
+  transform:none !important;
+
+  grid-column:2 !important;
+  width:100% !important;
+  height:calc(100vh - 74px) !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  padding:24px 28px !important;
+  box-sizing:border-box !important;
+
+  display:none !important;
+  visibility:hidden !important;
+  opacity:0 !important;
+}
+
+/* แสดงเฉพาะกล่องที่ active */
+#pageTeacherPanel.active .teacher-box.active,
+#pageTeacherPanel.active .teacher-box.teacher-open{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+}
+
+/* card ด้านขวา */
+#pageTeacherPanel.active .teacher-box.active > .card,
+#pageTeacherPanel.active .teacher-box.teacher-open > .card{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  width:100% !important;
+  max-width:1500px !important;
+  margin:0 auto !important;
+  background:#fff !important;
+  border-radius:24px !important;
+  padding:28px !important;
+  box-sizing:border-box !important;
+}
