@@ -1096,83 +1096,64 @@
 
   <script src="app.js"></script>
 
-<script>
+  <script>
 /* =====================================================
-   CLEAN TEACHER MENU ROUTER
-   ใช้แทนโค้ดแก้เมนูเดิมทั้งหมด
-   ไม่เปลี่ยนระบบเดิม แค่บังคับเปิด teacher-box ให้ถูกต้อง
+   FINAL PATCH: FILL EMPTY TEACHER PAGES
+   แก้ปัญหากดเมนูแล้ว div เปิดแต่ด้านในว่าง
 ===================================================== */
 
 (function(){
 
-  const prepareMap = {
-    teacherDashboardBox: ['teacherPrepareDashboard'],
-    teacherScoreBox: ['teacherPrepareScorePage'],
-    teacherRulesBox: ['teacherLoadLearningRules'],
-    teacherFilesBox: ['teacherPrepareFilesPage', 'teacherLoadMaterials'],
-    teacherDownloadBox: ['teacherPrepareDownloadFilesPage', 'teacherLoadDownloadFiles'],
-    teacherSettingsBox: ['teacherLoadSystemHealth'],
-    teacherExportBox: ['teacherPrepareExportPage'],
-    teacherAIBox: ['teacherPrepareAIPage'],
-    teacherSubmissionBox: ['teacherPrepareSubmissionPage']
-  };
-
-  const fallbackTitles = {
-    teacherSubmissionBox: 'งานที่นักศึกษาส่ง',
-    teacherAIBox: 'AI ตรวจงาน',
-    teacherDownloadBox: 'ไฟล์คำร้อง',
-    teacherRulesBox: 'กติกาการเรียน',
-    teacherFilesBox: 'เอกสารประกอบการเรียน',
-    teacherSettingsBox: 'ตั้งค่าระบบ',
-    teacherExportBox: 'ส่งออกข้อมูล'
-  };
-
-  function getTeacherPanel(){
-    return document.getElementById('pageTeacherPanel');
-  }
+  const FORCE_PAGES = [
+    'teacherAIBox',
+    'teacherSubmissionBox',
+    'teacherRulesBox',
+    'teacherFilesBox',
+    'teacherDownloadBox',
+    'teacherSettingsBox',
+    'teacherExportBox'
+  ];
 
   function getTeacherContainer(){
-    const panel = getTeacherPanel();
+    const panel = document.getElementById('pageTeacherPanel');
     if(!panel) return null;
     return panel.querySelector('.container') || panel;
   }
 
-  function ensureTeacherBox(id){
+  function ensureBox(id){
     let box = document.getElementById(id);
 
-    if(box) return box;
+    if(!box){
+      const container = getTeacherContainer();
+      if(!container){
+        alert('ไม่พบ container ของหน้าอาจารย์');
+        return null;
+      }
 
-    const container = getTeacherContainer();
-
-    if(!container){
-      alert('ไม่พบโครงหน้าอาจารย์ pageTeacherPanel');
-      return null;
+      box = document.createElement('div');
+      box.id = id;
+      box.className = 'teacher-box';
+      container.appendChild(box);
     }
-
-    box = document.createElement('div');
-    box.id = id;
-    box.className = 'teacher-box';
-    box.innerHTML = fallbackContent(id);
-    container.appendChild(box);
 
     return box;
   }
 
-  function fallbackContent(id){
-    const title = fallbackTitles[id] || id;
+  function fillTeacherPage(id, box){
+    if(!box) return;
 
     if(id === 'teacherAIBox'){
-      return `
+      box.innerHTML = `
         <div class="card">
           <div class="zone-title">
             <div>
               <h2>AI ตรวจงาน</h2>
-              <p class="zone-subtitle">ใช้ AI ช่วยตรวจงานรายคน โดยอาจารย์ตรวจทานและยืนยันคะแนนก่อนบันทึกจริง</p>
+              <p class="zone-subtitle">ใช้ AI ช่วยตรวจงานรายคน โดยอาจารย์ต้องตรวจทานและยืนยันคะแนนก่อนบันทึกจริง</p>
             </div>
           </div>
 
           <div class="note">
-            หมายเหตุ: หน้านี้ถูกแยกออกจากหน้ากรอกคะแนนรายคน เพื่อให้ใช้งานง่ายขึ้น
+            หมายเหตุ: AI ตรวจงานใช้สำหรับตรวจทีละคน ทีละชิ้นงาน ไม่ใช่การตรวจพร้อมกันทั้งห้อง
           </div>
 
           <hr>
@@ -1203,7 +1184,7 @@
               <label>เกณฑ์ตรวจเพิ่มเติม</label>
               <textarea id="aiPageRubric" rows="5" placeholder="ระบุเกณฑ์ที่ต้องการให้ AI ใช้ตรวจงาน"></textarea>
 
-              <button class="btn-main full" onclick="safeCall('teacherRunAIReviewFromAIPage')">AI ตรวจงานนักศึกษาที่เลือก</button>
+              <button class="btn-main full" onclick="safeRunTeacherFn('teacherRunAIReviewFromAIPage')">AI ตรวจงานนักศึกษาที่เลือก</button>
 
               <label>คะแนนที่ AI เสนอ / คะแนนที่อาจารย์ยืนยัน</label>
               <input id="aiPageFinalScore" type="number" placeholder="คะแนนหลังตรวจ">
@@ -1213,7 +1194,7 @@
 
               <input id="aiPageReviewId" type="hidden">
 
-              <button class="btn-soft full" onclick="safeCall('teacherConfirmAIReviewFromAIPage')">ยืนยันคะแนนจาก AI</button>
+              <button class="btn-soft full" onclick="safeRunTeacherFn('teacherConfirmAIReviewFromAIPage')">ยืนยันคะแนนจาก AI</button>
             </div>
           </div>
         </div>
@@ -1221,12 +1202,12 @@
     }
 
     if(id === 'teacherSubmissionBox'){
-      return `
+      box.innerHTML = `
         <div class="card">
           <div class="zone-title">
             <div>
               <h2>งานที่นักศึกษาส่ง</h2>
-              <p class="zone-subtitle">ตรวจสอบสถานะการส่งงานและเปิดไฟล์งานนักศึกษา</p>
+              <p class="zone-subtitle">ตรวจสอบไฟล์ล่าสุด สถานะการส่งงาน และเปิดไฟล์งานนักศึกษา</p>
             </div>
           </div>
 
@@ -1247,54 +1228,20 @@
             </div>
           </div>
 
-          <button class="btn-main full" onclick="safeCall('teacherLoadSubmissionReport')">โหลดรายงานการส่งงาน</button>
+          <button class="btn-main full" onclick="safeRunTeacherFn('teacherLoadSubmissionReport')">โหลดรายงานการส่งงาน</button>
 
           <div id="teacherSubmissionReportBox" class="mt-box"></div>
         </div>
       `;
     }
 
-    if(id === 'teacherDownloadBox'){
-      return `
-        <div class="card">
-          <div class="zone-title">
-            <div>
-              <h2>ไฟล์คำร้อง</h2>
-              <p class="zone-subtitle">เพิ่มไฟล์ PDF หรือแบบฟอร์มให้นักศึกษาดาวน์โหลด</p>
-            </div>
-          </div>
-
-          <div class="file-form-grid">
-            <div>
-              <label>ชื่อไฟล์</label>
-              <input id="downloadTitle" placeholder="เช่น คำร้องขอสอบ">
-            </div>
-
-            <div>
-              <label>รายละเอียด</label>
-              <input id="downloadDescription" placeholder="รายละเอียดเพิ่มเติม">
-            </div>
-
-            <div>
-              <label>แนบไฟล์</label>
-              <input id="downloadFile" type="file">
-            </div>
-          </div>
-
-          <button class="btn-main full" onclick="safeCall('teacherUploadDownloadFile')">เพิ่มไฟล์คำร้อง</button>
-
-          <div id="teacherDownloadFilesBox" class="mt-box"></div>
-        </div>
-      `;
-    }
-
     if(id === 'teacherRulesBox'){
-      return `
+      box.innerHTML = `
         <div class="card">
           <div class="zone-title">
             <div>
               <h2>กติกาการเรียน</h2>
-              <p class="zone-subtitle">แก้ไขข้อความและภาพกติกาที่นักศึกษาเห็น</p>
+              <p class="zone-subtitle">แก้ไขข้อความและภาพกติกาที่นักศึกษาเห็นหลังเข้าสู่ระบบ</p>
             </div>
           </div>
 
@@ -1308,8 +1255,8 @@
               <label>เปลี่ยนภาพกติกา</label>
               <input id="teacherRuleImage" type="file" accept="image/png,image/jpeg">
 
-              <button class="btn-main full" onclick="safeCall('teacherSaveLearningRules')">บันทึกกติกา</button>
-              <button class="btn-soft full" onclick="safeCall('teacherClearLearningRulesImage')">ลบรูปภาพกติกาเดิม</button>
+              <button class="btn-main full" onclick="safeRunTeacherFn('teacherSaveLearningRules')">บันทึกกติกา</button>
+              <button class="btn-soft full" onclick="safeRunTeacherFn('teacherClearLearningRulesImage')">ลบรูปภาพกติกาเดิม</button>
             </div>
 
             <div class="teacher-zone soft">
@@ -1323,7 +1270,7 @@
     }
 
     if(id === 'teacherFilesBox'){
-      return `
+      box.innerHTML = `
         <div class="card">
           <div class="zone-title">
             <div>
@@ -1350,17 +1297,51 @@
           </div>
 
           <label>รายละเอียด</label>
-          <textarea id="materialDescription" rows="4"></textarea>
+          <textarea id="materialDescription" rows="4" placeholder="รายละเอียดเอกสาร"></textarea>
 
-          <button class="btn-main full" onclick="safeCall('teacherUploadMaterial')">เพิ่มเอกสาร</button>
+          <button class="btn-main full" onclick="safeRunTeacherFn('teacherUploadMaterial')">เพิ่มเอกสาร</button>
 
           <div id="teacherMaterialsBox" class="mt-box"></div>
         </div>
       `;
     }
 
+    if(id === 'teacherDownloadBox'){
+      box.innerHTML = `
+        <div class="card">
+          <div class="zone-title">
+            <div>
+              <h2>ไฟล์คำร้อง</h2>
+              <p class="zone-subtitle">เพิ่มไฟล์ PDF หรือแบบฟอร์มให้นักศึกษาดาวน์โหลด</p>
+            </div>
+          </div>
+
+          <div class="file-form-grid">
+            <div>
+              <label>ชื่อไฟล์</label>
+              <input id="downloadTitle" placeholder="เช่น คำร้องขอสอบ">
+            </div>
+
+            <div>
+              <label>รายละเอียด</label>
+              <input id="downloadDescription" placeholder="รายละเอียดเพิ่มเติม">
+            </div>
+
+            <div>
+              <label>แนบไฟล์</label>
+              <input id="downloadFile" type="file">
+            </div>
+          </div>
+
+          <button class="btn-main full" onclick="safeRunTeacherFn('teacherUploadDownloadFile')">เพิ่มไฟล์คำร้อง</button>
+
+          <div id="teacherDownloadFilesBox" class="mt-box"></div>
+        </div>
+      `;
+    }
+
     if(id === 'teacherSettingsBox'){
-      return `
+      box.innerHTML = `
         <div class="card">
           <div class="zone-title">
             <div>
@@ -1369,15 +1350,17 @@
             </div>
           </div>
 
-          <button class="btn-main" onclick="safeCall('teacherLoadSystemHealth')">ตรวจสอบระบบ</button>
+          <button class="btn-main" onclick="safeRunTeacherFn('teacherLoadSystemHealth')">ตรวจสอบระบบ</button>
 
-          <div id="systemHealthBox" class="mt-box"></div>
+          <div id="systemHealthBox" class="mt-box">
+            <div class="student-empty">กด “ตรวจสอบระบบ” เพื่อโหลดสถานะ</div>
+          </div>
         </div>
       `;
     }
 
     if(id === 'teacherExportBox'){
-      return `
+      box.innerHTML = `
         <div class="card">
           <div class="zone-title">
             <div>
@@ -1390,32 +1373,27 @@
           <select id="exportCourse"></select>
 
           <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
-            <button class="btn-main" onclick="safeCall('teacherLoadExportReport')">โหลดรายงาน</button>
-            <button class="btn-soft" onclick="safePrintExport()">พิมพ์ / บันทึก PDF</button>
+            <button class="btn-main" onclick="safeRunTeacherFn('teacherLoadExportReport')">โหลดรายงาน</button>
+            <button class="btn-soft" onclick="safePrintTeacherExport()">พิมพ์ / บันทึก PDF</button>
           </div>
 
           <div id="teacherExportResult" class="mt-box"></div>
         </div>
       `;
     }
-
-    return `
-      <div class="card">
-        <h2>${title}</h2>
-        <div class="note">หน้านี้มีอยู่ในระบบ แต่ยังไม่มีเนื้อหาสำรองจาก Router</div>
-      </div>
-    `;
   }
 
-  function hideAllTeacherBoxes(){
+  function hideAllBoxes(){
     document.querySelectorAll('#pageTeacherPanel .teacher-box').forEach(function(box){
       box.classList.remove('active');
       box.classList.remove('teacher-open');
       box.style.display = 'none';
+      box.style.visibility = 'hidden';
+      box.style.opacity = '0';
     });
   }
 
-  function activateMenu(id){
+  function markActiveButton(id){
     document.querySelectorAll('#pageTeacherPanel .teacher-tabs button').forEach(function(btn){
       btn.classList.remove('active-tab');
 
@@ -1426,7 +1404,7 @@
     });
   }
 
-  function copyCourseOptions(targetId){
+  function copyCourseOptionsTo(targetId){
     const target = document.getElementById(targetId);
     if(!target) return;
 
@@ -1451,23 +1429,13 @@
       }
     }
 
-    if(!target.innerHTML.trim()){
-      target.innerHTML = '<option value="">ยังไม่มีรายวิชา</option>';
-    }
+    target.innerHTML = '<option value="">ยังไม่มีรายวิชา</option>';
   }
 
-  function runPrepare(id){
+  function preparePageAfterOpen(id){
     try {
-      if(id === 'teacherDashboardBox') safeCall('teacherPrepareDashboard');
-      if(id === 'teacherScoreBox') safeCall('teacherPrepareScorePage');
-
-      if(id === 'teacherSubmissionBox'){
-        copyCourseOptions('teacherSubmissionCourse');
-        safeCall('teacherLoadSubmissionAssignments');
-      }
-
       if(id === 'teacherAIBox'){
-        copyCourseOptions('aiCourse');
+        copyCourseOptionsTo('aiCourse');
 
         const aiAssignment = document.getElementById('aiAssignment');
         const scoreAssignment = document.getElementById('teacherScoreAssignment');
@@ -1476,35 +1444,50 @@
           aiAssignment.innerHTML = scoreAssignment.innerHTML;
         }
 
-        safeCall('teacherPrepareAIPage');
+        safeRunTeacherFn('teacherPrepareAIPage');
       }
 
-      if(id === 'teacherRulesBox') safeCall('teacherLoadLearningRules');
+      if(id === 'teacherSubmissionBox'){
+        copyCourseOptionsTo('teacherSubmissionCourse');
+        safeRunTeacherFn('teacherLoadSubmissionAssignments');
+      }
+
+      if(id === 'teacherRulesBox'){
+        safeRunTeacherFn('teacherLoadLearningRules');
+      }
 
       if(id === 'teacherFilesBox'){
-        copyCourseOptions('teacherMaterialCourse');
-        safeCall('teacherPrepareFilesPage');
-        safeCall('teacherLoadMaterials');
+        copyCourseOptionsTo('teacherMaterialCourse');
+        safeRunTeacherFn('teacherPrepareFilesPage');
+        safeRunTeacherFn('teacherLoadMaterials');
       }
 
       if(id === 'teacherDownloadBox'){
-        safeCall('teacherLoadDownloadFiles');
+        safeRunTeacherFn('teacherLoadDownloadFiles');
       }
 
       if(id === 'teacherSettingsBox'){
-        safeCall('teacherLoadSystemHealth');
+        safeRunTeacherFn('teacherLoadSystemHealth');
       }
 
       if(id === 'teacherExportBox'){
-        copyCourseOptions('exportCourse');
-        safeCall('teacherPrepareExportPage');
+        copyCourseOptionsTo('exportCourse');
+        safeRunTeacherFn('teacherPrepareExportPage');
+      }
+
+      if(id === 'teacherScoreBox'){
+        safeRunTeacherFn('teacherPrepareScorePage');
+      }
+
+      if(id === 'teacherDashboardBox'){
+        safeRunTeacherFn('teacherPrepareDashboard');
       }
     } catch(err) {
-      console.warn('runPrepare error:', id, err);
+      console.warn('preparePageAfterOpen error:', id, err);
     }
   }
 
-  window.safeCall = function(fnName){
+  window.safeRunTeacherFn = function(fnName){
     if(typeof window[fnName] === 'function'){
       return window[fnName]();
     }
@@ -1513,7 +1496,7 @@
     return null;
   };
 
-  window.safePrintExport = function(){
+  window.safePrintTeacherExport = function(){
     if(typeof window.printSection === 'function'){
       window.printSection('teacherExportResult');
       return;
@@ -1523,14 +1506,18 @@
   };
 
   window.openTeacherPage = function(id){
-    const box = ensureTeacherBox(id);
+    const box = ensureBox(id);
 
     if(!box){
       alert('เปิดหน้าไม่ได้: ' + id);
       return;
     }
 
-    hideAllTeacherBoxes();
+    if(FORCE_PAGES.includes(id) || !box.innerHTML.trim()){
+      fillTeacherPage(id, box);
+    }
+
+    hideAllBoxes();
 
     box.classList.add('active');
     box.classList.add('teacher-open');
@@ -1538,8 +1525,8 @@
     box.style.visibility = 'visible';
     box.style.opacity = '1';
 
-    activateMenu(id);
-    runPrepare(id);
+    markActiveButton(id);
+    preparePageAfterOpen(id);
 
     try {
       box.scrollTop = 0;
