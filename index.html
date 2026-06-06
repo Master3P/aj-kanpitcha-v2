@@ -500,13 +500,19 @@
 
   <button class="btn-main" onclick="teacherTab('teacherScoreBox');teacherPrepareScorePage()">✏️ กรอกคะแนนรายคน</button>
 
-  <button class="btn-main" onclick="teacherTab('teacherFilesBox');teacherPrepareFilesPage()">📄 เอกสารประกอบการเรียน</button>
+  <button class="btn-main" onclick="teacherDynamicPage('submissions')">📁 งานที่นักศึกษาส่ง</button>
 
-  <button class="btn-main" onclick="teacherTab('teacherRulesBox');teacherLoadLearningRules()">📌 กติกาการเรียน</button>
+<button class="btn-main" onclick="teacherDynamicPage('ai')">🤖 AI ตรวจงาน</button>
 
-  <button class="btn-main" onclick="teacherTab('teacherExportBox');teacherPrepareExportPage()">📤 ส่งออกข้อมูล</button>
-  
-  <button class="btn-main" onclick="teacherTab('teacherSettingsBox');teacherLoadSystemHealth()">⚙️ ตั้งค่า</button>
+<button class="btn-main" onclick="teacherDynamicPage('rules')">📌 กติกาการเรียน</button>
+
+<button class="btn-main" onclick="teacherDynamicPage('materials')">📄 เอกสารประกอบการเรียน</button>
+
+<button class="btn-main" onclick="teacherDynamicPage('downloads')">🧾 ไฟล์คำร้อง</button>
+
+<button class="btn-main" onclick="teacherDynamicPage('settings')">⚙️ ตั้งค่า</button>
+
+<button class="btn-main" onclick="teacherDynamicPage('export')">📤 ส่งออกข้อมูล</button>
   
   <button class="btn-main logout-btn" onclick="teacherLogout()">↪ ออกจากระบบ</button>
 
@@ -1086,9 +1092,458 @@
 </div>
     
   </div>
+
+    <!-- DYNAMIC TEACHER PAGE: ใช้สำหรับเมนูที่เคยกดแล้วไม่แสดง -->
+<div id="teacherDynamicBox" class="teacher-box">
+  <div class="card">
+    <h2>กำลังโหลดหน้า</h2>
+    <p>กรุณาเลือกเมนูจากด้านซ้าย</p>
+  </div>
+</div>
+    
 </section>
 
   <script src="app.js"></script>
 
+  <script src="app.js"></script>
+
+<script>
+/* =====================================================
+   CLEAN FIX: TEACHER DYNAMIC PAGES
+   แก้เมนูช่วงล่างกดแล้วไม่แสดง
+===================================================== */
+
+(function(){
+
+  function el(id){
+    return document.getElementById(id);
+  }
+
+  function all(sel){
+    return Array.from(document.querySelectorAll(sel));
+  }
+
+  function safeCall(fnName){
+    if(typeof window[fnName] === 'function'){
+      try {
+        return window[fnName]();
+      } catch(err) {
+        console.warn('Error calling', fnName, err);
+      }
+    } else {
+      console.warn('ไม่พบฟังก์ชัน:', fnName);
+    }
+    return null;
+  }
+
+  function getTeacherContainer(){
+    const panel = el('pageTeacherPanel');
+    if(!panel) return null;
+    return panel.querySelector('.container') || panel;
+  }
+
+  function ensureDynamicBox(){
+    let box = el('teacherDynamicBox');
+
+    if(box) return box;
+
+    const container = getTeacherContainer();
+
+    if(!container){
+      alert('ไม่พบโครงหน้าอาจารย์');
+      return null;
+    }
+
+    box = document.createElement('div');
+    box.id = 'teacherDynamicBox';
+    box.className = 'teacher-box';
+    container.appendChild(box);
+
+    return box;
+  }
+
+  function copyCourseOptions(targetId){
+    const target = el(targetId);
+    if(!target) return;
+
+    const sources = [
+      'teacherScoreCourse',
+      'teacherMaterialCourse',
+      'teacherSubmissionCourse',
+      'teacherDashboardCourse',
+      'teacherAssignmentCourse',
+      'teacherLeaveCourse',
+      'exportCourse',
+      'aiCourse'
+    ];
+
+    for(const id of sources){
+      const src = el(id);
+
+      if(src && src !== target && src.innerHTML && src.innerHTML.trim()){
+        target.innerHTML = src.innerHTML;
+        if(src.value) target.value = src.value;
+        return;
+      }
+    }
+
+    target.innerHTML = '<option value="">ยังไม่มีรายวิชา</option>';
+  }
+
+  function openDynamicBox(){
+    const box = ensureDynamicBox();
+
+    if(!box) return null;
+
+    all('#pageTeacherPanel .teacher-box').forEach(function(x){
+      x.classList.remove('active');
+      x.classList.remove('teacher-open');
+      x.style.display = 'none';
+      x.style.visibility = 'hidden';
+      x.style.opacity = '0';
+    });
+
+    box.classList.add('active');
+    box.classList.add('teacher-open');
+    box.style.display = 'block';
+    box.style.visibility = 'visible';
+    box.style.opacity = '1';
+
+    return box;
+  }
+
+  function setActiveMenu(type){
+    all('#pageTeacherPanel .teacher-tabs button').forEach(function(btn){
+      btn.classList.remove('active-tab');
+
+      const click = btn.getAttribute('onclick') || '';
+
+      if(click.includes("'" + type + "'") || click.includes('"' + type + '"')){
+        btn.classList.add('active-tab');
+      }
+    });
+  }
+
+  function pageSubmissions(){
+    return `
+      <div class="card">
+        <div class="zone-title">
+          <div>
+            <h2>งานที่นักศึกษาส่ง</h2>
+            <p class="zone-subtitle">ตรวจสอบไฟล์ล่าสุด สถานะการส่งงาน และเปิดไฟล์งานนักศึกษา</p>
+          </div>
+        </div>
+
+        <div class="file-form-grid">
+          <div>
+            <label>รายวิชา</label>
+            <select id="teacherSubmissionCourse" onchange="safeTeacherRun('teacherLoadSubmissionAssignments')"></select>
+          </div>
+
+          <div>
+            <label>ชิ้นงาน</label>
+            <select id="teacherSubmissionAssignment"></select>
+          </div>
+
+          <div>
+            <label>ค้นหารหัส / ชื่อ</label>
+            <input id="teacherSubmissionSearch" placeholder="พิมพ์เพื่อค้นหา">
+          </div>
+        </div>
+
+        <button class="btn-main full" onclick="safeTeacherRun('teacherLoadSubmissionReport')">โหลดรายงานการส่งงาน</button>
+
+        <div id="teacherSubmissionReportBox" class="mt-box"></div>
+      </div>
+    `;
+  }
+
+  function pageAI(){
+    return `
+      <div class="card">
+        <div class="zone-title">
+          <div>
+            <h2>AI ตรวจงาน</h2>
+            <p class="zone-subtitle">ใช้ AI ช่วยตรวจงานรายคน โดยอาจารย์ต้องตรวจทานและยืนยันคะแนนก่อนบันทึกจริง</p>
+          </div>
+        </div>
+
+        <div class="note">
+          หมายเหตุ: AI ตรวจงานใช้สำหรับตรวจทีละคน ทีละชิ้นงาน ไม่ใช่การตรวจพร้อมกันทั้งห้อง
+        </div>
+
+        <hr>
+
+        <div class="teacher-two-col">
+          <div class="teacher-zone">
+            <h3>เลือกข้อมูลสำหรับตรวจ</h3>
+
+            <label>รายวิชา</label>
+            <select id="aiCourse" onchange="safeTeacherRun('teacherLoadAIAssignments')"></select>
+
+            <label>ชิ้นงาน</label>
+            <select id="aiAssignment"></select>
+
+            <label>ค้นหานักศึกษา</label>
+            <input id="aiStudentSearch" placeholder="พิมพ์รหัสหรือชื่อ" oninput="safeTeacherRun('teacherSearchStudentsForAI')">
+
+            <div id="aiStudentResults" class="mt-box"></div>
+
+            <label>นักศึกษาที่เลือก</label>
+            <input id="aiSelectedStudent" readonly placeholder="ยังไม่ได้เลือกนักศึกษา">
+            <input id="aiSelectedStudentId" type="hidden">
+          </div>
+
+          <div class="teacher-zone">
+            <h3>เกณฑ์ตรวจและผลตรวจ</h3>
+
+            <label>เกณฑ์ตรวจเพิ่มเติม</label>
+            <textarea id="aiPageRubric" rows="5" placeholder="ระบุเกณฑ์ที่ต้องการให้ AI ใช้ตรวจงาน"></textarea>
+
+            <button class="btn-main full" onclick="safeTeacherRun('teacherRunAIReviewFromAIPage')">AI ตรวจงานนักศึกษาที่เลือก</button>
+
+            <label>คะแนนที่ AI เสนอ / คะแนนที่อาจารย์ยืนยัน</label>
+            <input id="aiPageFinalScore" type="number" placeholder="คะแนนหลังตรวจ">
+
+            <label>คอมเมนต์จาก AI / อาจารย์แก้ไขได้</label>
+            <textarea id="aiPageCommentBox" rows="8" placeholder="ผลตรวจจาก AI จะแสดงที่นี่"></textarea>
+
+            <input id="aiPageReviewId" type="hidden">
+
+            <button class="btn-soft full" onclick="safeTeacherRun('teacherConfirmAIReviewFromAIPage')">ยืนยันคะแนนจาก AI</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function pageRules(){
+    return `
+      <div class="card">
+        <div class="zone-title">
+          <div>
+            <h2>กติกาการเรียน</h2>
+            <p class="zone-subtitle">แก้ไขข้อความและภาพกติกาที่นักศึกษาเห็นหลังเข้าสู่ระบบ</p>
+          </div>
+        </div>
+
+        <div class="teacher-two-col">
+          <div class="teacher-zone">
+            <h3>แก้ไขกติกา</h3>
+
+            <label>ข้อความกติกา</label>
+            <textarea id="teacherRuleText" rows="8" placeholder="พิมพ์กติกาการเรียน"></textarea>
+
+            <label>เปลี่ยนภาพกติกา</label>
+            <input id="teacherRuleImage" type="file" accept="image/png,image/jpeg">
+
+            <button class="btn-main full" onclick="safeTeacherRun('teacherSaveLearningRules')">บันทึกกติกา</button>
+            <button class="btn-soft full" onclick="safeTeacherRun('teacherClearLearningRulesImage')">ลบรูปภาพกติกาเดิม</button>
+          </div>
+
+          <div class="teacher-zone soft">
+            <h3>ตัวอย่างที่นักศึกษาเห็น</h3>
+            <div id="teacherRulePreviewImage" class="mt-box"></div>
+            <div id="teacherRulePreviewText" class="student-status-card mt-box"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function pageMaterials(){
+    return `
+      <div class="card">
+        <div class="zone-title">
+          <div>
+            <h2>เอกสารประกอบการเรียน</h2>
+            <p class="zone-subtitle">เพิ่มไฟล์เอกสารให้นักศึกษาเปิดดู</p>
+          </div>
+        </div>
+
+        <div class="file-form-grid">
+          <div>
+            <label>รายวิชา</label>
+            <select id="teacherMaterialCourse"></select>
+          </div>
+
+          <div>
+            <label>ชื่อเอกสาร</label>
+            <input id="materialTitle" placeholder="ชื่อเอกสาร">
+          </div>
+
+          <div>
+            <label>แนบไฟล์</label>
+            <input id="materialFile" type="file">
+          </div>
+        </div>
+
+        <label>รายละเอียด</label>
+        <textarea id="materialDescription" rows="4" placeholder="รายละเอียดเอกสาร"></textarea>
+
+        <button class="btn-main full" onclick="safeTeacherRun('teacherUploadMaterial')">เพิ่มเอกสาร</button>
+
+        <div id="teacherMaterialsBox" class="mt-box"></div>
+      </div>
+    `;
+  }
+
+  function pageDownloads(){
+    return `
+      <div class="card">
+        <div class="zone-title">
+          <div>
+            <h2>ไฟล์คำร้อง</h2>
+            <p class="zone-subtitle">เพิ่มไฟล์ PDF หรือแบบฟอร์มให้นักศึกษาดาวน์โหลด</p>
+          </div>
+        </div>
+
+        <div class="file-form-grid">
+          <div>
+            <label>ชื่อไฟล์</label>
+            <input id="downloadTitle" placeholder="เช่น คำร้องขอสอบ">
+          </div>
+
+          <div>
+            <label>รายละเอียด</label>
+            <input id="downloadDescription" placeholder="รายละเอียดเพิ่มเติม">
+          </div>
+
+          <div>
+            <label>แนบไฟล์</label>
+            <input id="downloadFile" type="file">
+          </div>
+        </div>
+
+        <button class="btn-main full" onclick="safeTeacherRun('teacherUploadDownloadFile')">เพิ่มไฟล์คำร้อง</button>
+
+        <div id="teacherDownloadFilesBox" class="mt-box"></div>
+      </div>
+    `;
+  }
+
+  function pageSettings(){
+    return `
+      <div class="card">
+        <div class="zone-title">
+          <div>
+            <h2>ตั้งค่าระบบ</h2>
+            <p class="zone-subtitle">ตรวจสอบสถานะระบบและการเชื่อมต่อฐานข้อมูล</p>
+          </div>
+        </div>
+
+        <button class="btn-main" onclick="safeTeacherRun('teacherLoadSystemHealth')">ตรวจสอบระบบ</button>
+
+        <div id="systemHealthBox" class="mt-box">
+          <div class="student-empty">กด “ตรวจสอบระบบ” เพื่อโหลดสถานะ</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function pageExport(){
+    return `
+      <div class="card">
+        <div class="zone-title">
+          <div>
+            <h2>ส่งออกข้อมูล</h2>
+            <p class="zone-subtitle">เลือกรายวิชาเพื่อส่งออกหรือพิมพ์รายงาน</p>
+          </div>
+        </div>
+
+        <label>รายวิชา</label>
+        <select id="exportCourse"></select>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;">
+          <button class="btn-main" onclick="safeTeacherRun('teacherLoadExportReport')">โหลดรายงาน</button>
+          <button class="btn-soft" onclick="safeTeacherPrintExport()">พิมพ์ / บันทึก PDF</button>
+        </div>
+
+        <div id="teacherExportResult" class="mt-box"></div>
+      </div>
+    `;
+  }
+
+  function prepare(type){
+    if(type === 'submissions'){
+      copyCourseOptions('teacherSubmissionCourse');
+      safeCall('teacherLoadSubmissionAssignments');
+    }
+
+    if(type === 'ai'){
+      copyCourseOptions('aiCourse');
+
+      const aiAssignment = el('aiAssignment');
+      const scoreAssignment = el('teacherScoreAssignment');
+
+      if(aiAssignment && scoreAssignment && scoreAssignment.innerHTML.trim()){
+        aiAssignment.innerHTML = scoreAssignment.innerHTML;
+      }
+
+      safeCall('teacherPrepareAIPage');
+    }
+
+    if(type === 'rules'){
+      safeCall('teacherLoadLearningRules');
+    }
+
+    if(type === 'materials'){
+      copyCourseOptions('teacherMaterialCourse');
+      safeCall('teacherPrepareFilesPage');
+      safeCall('teacherLoadMaterials');
+    }
+
+    if(type === 'downloads'){
+      safeCall('teacherLoadDownloadFiles');
+    }
+
+    if(type === 'settings'){
+      safeCall('teacherLoadSystemHealth');
+    }
+
+    if(type === 'export'){
+      copyCourseOptions('exportCourse');
+      safeCall('teacherPrepareExportPage');
+    }
+  }
+
+  window.safeTeacherRun = function(fnName){
+    return safeCall(fnName);
+  };
+
+  window.safeTeacherPrintExport = function(){
+    if(typeof window.printSection === 'function'){
+      window.printSection('teacherExportResult');
+    }else{
+      window.print();
+    }
+  };
+
+  window.teacherDynamicPage = function(type){
+    const box = openDynamicBox();
+
+    if(!box) return;
+
+    if(type === 'submissions') box.innerHTML = pageSubmissions();
+    if(type === 'ai') box.innerHTML = pageAI();
+    if(type === 'rules') box.innerHTML = pageRules();
+    if(type === 'materials') box.innerHTML = pageMaterials();
+    if(type === 'downloads') box.innerHTML = pageDownloads();
+    if(type === 'settings') box.innerHTML = pageSettings();
+    if(type === 'export') box.innerHTML = pageExport();
+
+    setActiveMenu(type);
+    prepare(type);
+
+    try {
+      box.scrollTop = 0;
+    } catch(e) {}
+
+    console.log('เปิดหน้า Dynamic:', type);
+  };
+
+})();
+</script>
+  
 </body>
 </html>
