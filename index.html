@@ -1544,6 +1544,527 @@
 
 })();
 </script>
+
+  <script>
+/* =====================================================
+   PATCH: Dynamic Pages Data Loader
+   แก้รายวิชาไม่ขึ้น / ปุ่มโหลดรายงาน / ตั้งค่า / ส่งออกข้อมูล
+===================================================== */
+
+(function(){
+
+  function $(id){
+    return document.getElementById(id);
+  }
+
+  function htmlEscape(s){
+    return String(s ?? '')
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;')
+      .replaceAll('"','&quot;')
+      .replaceAll("'","&#039;");
+  }
+
+  function getSb(){
+    if(window.sb) return window.sb;
+    if(window.supabaseClient) return window.supabaseClient;
+    if(window.SUPABASE_CLIENT) return window.SUPABASE_CLIENT;
+    return null;
+  }
+
+  function getCourseLabel(c){
+    return c.display_name || c.course_display_name || c.course_name || c.name || c.title || c.id || '';
+  }
+
+  async function fetchCourses(){
+    const client = getSb();
+
+    if(!client){
+      console.warn('ไม่พบ Supabase client');
+      return [];
+    }
+
+    const { data, error } = await client
+      .from('courses')
+      .select('*')
+      .order('created_at', { ascending:false });
+
+    if(error){
+      console.error('load courses error:', error);
+      return [];
+    }
+
+    return data || [];
+  }
+
+  async function fillCourseSelect(selectId){
+    const select = $(selectId);
+    if(!select) return;
+
+    select.innerHTML = '<option value="">กำลังโหลดรายวิชา...</option>';
+
+    const courses = await fetchCourses();
+
+    if(!courses.length){
+      select.innerHTML = '<option value="">ยังไม่มีรายวิชา</option>';
+      return;
+    }
+
+    select.innerHTML = courses.map(c => {
+      const id = c.id || c.course_id;
+      const label = getCourseLabel(c);
+      return `<option value="${htmlEscape(id)}">${htmlEscape(label)}</option>`;
+    }).join('');
+  }
+
+  async function fillAllDynamicCourseSelects(){
+    await fillCourseSelect('teacherSubmissionCourse');
+    await fillCourseSelect('aiCourse');
+    await fillCourseSelect('teacherMaterialCourse');
+    await fillCourseSelect('exportCourse');
+  }
+
+  async function fetchAssignments(courseId){
+    const client = getSb();
+    if(!client || !courseId) return [];
+
+    const { data, error } = await client
+      .from('assignments')
+      .select('*')
+      .eq('course_id', courseId)
+      .order('created_at', { ascending:true });
+
+    if(error){
+      console.error('load assignments error:', error);
+      return [];
+    }
+
+    return data || [];
+  }
+
+  function assignmentLabel(a){
+    return a.title || a.name || a.assignment_name || a.column_name || a.column_key || a.id || '';
+  }
+
+  async function fillAssignmentSelect(courseSelectId, assignmentSelectId){
+    const courseId = $(courseSelectId)?.value || '';
+    const select = $(assignmentSelectId);
+
+    if(!select) return;
+
+    if(!courseId){
+      select.innerHTML = '<option value="">กรุณาเลือกรายวิชา</option>';
+      return;
+    }
+
+    select.innerHTML = '<option value="">กำลังโหลดชิ้นงาน...</option>';
+
+    const assignments = await fetchAssignments(courseId);
+
+    if(!assignments.length){
+      select.innerHTML = '<option value="">ยังไม่มีชิ้นงาน</option>';
+      return;
+    }
+
+    select.innerHTML = assignments.map(a => {
+      const id = a.id || a.assignment_id || a.column_key || assignmentLabel(a);
+      return `<option value="${htmlEscape(id)}">${htmlEscape(assignmentLabel(a))}</option>`;
+    }).join('');
+  }
+
+  window.teacherLoadSubmissionAssignments = async function(){
+    await fillAssignmentSelect('teacherSubmissionCourse', 'teacherSubmissionAssignment');
+  };
+
+  window.teacherLoadAIAssignments = async function(){
+    await fillAssignmentSelect('aiCourse', 'aiAssignment');
+  };
+
+  window.teacherLoadMaterials = async function(){
+    const box = $('teacherMaterialsBox');
+    const courseId = $('teacherMaterialCourse')?.value || '';
+
+    if(!box) return;
+
+    const client = getSb();
+
+    if(!client){
+      box.innerHTML = '<div class="student-empty">ไม่พบการเชื่อมต่อ Supabase</div>';
+      return;
+    }
+
+    box.innerHTML = '<div class="student-empty">กำลังโหลดรายการเอกสาร...</div>';
+
+    let query = client.from('materials').select('*').order('created_at', { ascending:false });
+
+    if(courseId){
+      query = query.eq('course_id', courseId);
+    }
+
+    let { data, error } = await query;
+
+    if(error){
+      // เผื่อบางระบบใช้ชื่อ table เป็น course_materials
+      const retry = await client.from('course_materials').select('*').order('created_at', { ascending:false });
+      data = retry.data;
+      error = retry.error;
+    }
+
+    if(error){
+      box.innerHTML = '<div class="student-empty">โหลดเอกสารไม่สำเร็จ: ' + htmlEscape(error.message) + '</div>';
+      return;
+    }
+
+    if(!data || !data.length){
+      box.innerHTML = '<div class="student-empty">ยังไม่มีเอกสาร</div>';
+      return;
+    }
+
+    box.innerHTML = data.map(x => {
+      const title = x.title || x.name || x.file_name || 'เอกสาร';
+      const url = x.file_url || x.url || x.public_url || '#';
+
+      return `
+        <div class="student-row">
+          <div>
+            <b>${htmlEscape(title)}</b><br>
+            <small>${htmlEscape(x.description || '')}</small>
+          </div>
+          <a class="btn-soft" href="${htmlEscape(url)}" target="_blank">เปิดไฟล์</a>
+        </div>
+      `;
+    }).join('');
+  };
+
+  window.teacherLoadDownloadFiles = async function(){
+    const box = $('teacherDownloadFilesBox');
+    if(!box) return;
+
+    const client = getSb();
+
+    if(!client){
+      box.innerHTML = '<div class="student-empty">ไม่พบการเชื่อมต่อ Supabase</div>';
+      return;
+    }
+
+    box.innerHTML = '<div class="student-empty">กำลังโหลดไฟล์คำร้อง...</div>';
+
+    let { data, error } = await client
+      .from('download_files')
+      .select('*')
+      .order('created_at', { ascending:false });
+
+    if(error){
+      // เผื่อบางระบบใช้ชื่อ table เป็น request_files
+      const retry = await client.from('request_files').select('*').order('created_at', { ascending:false });
+      data = retry.data;
+      error = retry.error;
+    }
+
+    if(error){
+      box.innerHTML = '<div class="student-empty">โหลดไฟล์คำร้องไม่สำเร็จ: ' + htmlEscape(error.message) + '</div>';
+      return;
+    }
+
+    if(!data || !data.length){
+      box.innerHTML = '<div class="student-empty">ยังไม่มีไฟล์คำร้อง</div>';
+      return;
+    }
+
+    box.innerHTML = data.map(x => {
+      const title = x.title || x.name || x.file_name || 'ไฟล์คำร้อง';
+      const url = x.file_url || x.url || x.public_url || '#';
+
+      return `
+        <div class="student-row">
+          <div>
+            <b>${htmlEscape(title)}</b><br>
+            <small>${htmlEscape(x.description || '')}</small>
+          </div>
+          <a class="btn-soft" href="${htmlEscape(url)}" target="_blank">เปิดไฟล์</a>
+        </div>
+      `;
+    }).join('');
+  };
+
+  window.teacherLoadSubmissionReport = async function(){
+    const box = $('teacherSubmissionReportBox');
+    const courseId = $('teacherSubmissionCourse')?.value || '';
+    const assignmentId = $('teacherSubmissionAssignment')?.value || '';
+    const keyword = ($('teacherSubmissionSearch')?.value || '').toLowerCase().trim();
+
+    if(!box) return;
+
+    if(!courseId){
+      box.innerHTML = '<div class="student-empty">กรุณาเลือกรายวิชา</div>';
+      return;
+    }
+
+    const client = getSb();
+
+    if(!client){
+      box.innerHTML = '<div class="student-empty">ไม่พบการเชื่อมต่อ Supabase</div>';
+      return;
+    }
+
+    box.innerHTML = '<div class="student-empty">กำลังโหลดรายงานการส่งงาน...</div>';
+
+    const { data: students, error: stErr } = await client
+      .from('students')
+      .select('*')
+      .eq('course_id', courseId)
+      .order('student_id', { ascending:true });
+
+    if(stErr){
+      box.innerHTML = '<div class="student-empty">โหลดรายชื่อนักศึกษาไม่สำเร็จ: ' + htmlEscape(stErr.message) + '</div>';
+      return;
+    }
+
+    let subQuery = client
+      .from('submissions')
+      .select('*')
+      .eq('course_id', courseId);
+
+    if(assignmentId){
+      subQuery = subQuery.eq('assignment_id', assignmentId);
+    }
+
+    const { data: submissions, error: subErr } = await subQuery;
+
+    if(subErr){
+      box.innerHTML = '<div class="student-empty">โหลดงานที่ส่งไม่สำเร็จ: ' + htmlEscape(subErr.message) + '</div>';
+      return;
+    }
+
+    const subMap = new Map();
+
+    (submissions || []).forEach(s => {
+      const sid = String(s.student_id || '');
+      subMap.set(sid, s);
+    });
+
+    const rows = (students || []).filter(s => {
+      if(!keyword) return true;
+      const sid = String(s.student_id || '').toLowerCase();
+      const name = String(s.full_name || s.name || '').toLowerCase();
+      return sid.includes(keyword) || name.includes(keyword);
+    });
+
+    if(!rows.length){
+      box.innerHTML = '<div class="student-empty">ไม่พบข้อมูลนักศึกษา</div>';
+      return;
+    }
+
+    box.innerHTML = `
+      <div class="table-wrap">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>รหัส</th>
+              <th>ชื่อ</th>
+              <th>สถานะ</th>
+              <th>เวลาส่งล่าสุด</th>
+              <th>ไฟล์</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map(s => {
+              const sid = String(s.student_id || '');
+              const sub = subMap.get(sid);
+              const name = s.full_name || s.name || '';
+
+              if(sub){
+                const url = sub.file_url || sub.url || sub.public_url || '#';
+                const time = sub.submitted_at || sub.created_at || '-';
+
+                return `
+                  <tr>
+                    <td>${htmlEscape(sid)}</td>
+                    <td>${htmlEscape(name)}</td>
+                    <td>✅ ส่งแล้ว</td>
+                    <td>${htmlEscape(time)}</td>
+                    <td><a href="${htmlEscape(url)}" target="_blank">เปิดไฟล์</a></td>
+                  </tr>
+                `;
+              }
+
+              return `
+                <tr>
+                  <td>${htmlEscape(sid)}</td>
+                  <td>${htmlEscape(name)}</td>
+                  <td>ยังไม่ส่ง</td>
+                  <td>-</td>
+                  <td>-</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  };
+
+  window.teacherLoadSystemHealth = async function(){
+    const box = $('systemHealthBox');
+    if(!box) return;
+
+    const client = getSb();
+
+    box.innerHTML = '<div class="student-empty">กำลังตรวจสอบระบบ...</div>';
+
+    if(!client){
+      box.innerHTML = '<div class="student-empty">❌ ไม่พบ Supabase client</div>';
+      return;
+    }
+
+    const checks = [];
+
+    async function checkTable(name){
+      try {
+        const { error } = await client.from(name).select('*').limit(1);
+        checks.push({
+          name,
+          ok: !error,
+          msg: error ? error.message : 'ใช้งานได้'
+        });
+      } catch(err) {
+        checks.push({
+          name,
+          ok:false,
+          msg: err.message
+        });
+      }
+    }
+
+    await checkTable('courses');
+    await checkTable('students');
+    await checkTable('assignments');
+    await checkTable('submissions');
+
+    box.innerHTML = `
+      <div class="table-wrap">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>ส่วนระบบ</th>
+              <th>สถานะ</th>
+              <th>รายละเอียด</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${checks.map(c => `
+              <tr>
+                <td>${htmlEscape(c.name)}</td>
+                <td>${c.ok ? '✅ ปกติ' : '❌ มีปัญหา'}</td>
+                <td>${htmlEscape(c.msg)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  };
+
+  window.teacherLoadExportReport = async function(){
+    const box = $('teacherExportResult');
+    const courseId = $('exportCourse')?.value || '';
+
+    if(!box) return;
+
+    if(!courseId){
+      box.innerHTML = '<div class="student-empty">กรุณาเลือกรายวิชา</div>';
+      return;
+    }
+
+    const client = getSb();
+
+    if(!client){
+      box.innerHTML = '<div class="student-empty">ไม่พบการเชื่อมต่อ Supabase</div>';
+      return;
+    }
+
+    box.innerHTML = '<div class="student-empty">กำลังโหลดรายงาน...</div>';
+
+    const { data: students, error } = await client
+      .from('students')
+      .select('*')
+      .eq('course_id', courseId)
+      .order('student_id', { ascending:true });
+
+    if(error){
+      box.innerHTML = '<div class="student-empty">โหลดรายงานไม่สำเร็จ: ' + htmlEscape(error.message) + '</div>';
+      return;
+    }
+
+    if(!students || !students.length){
+      box.innerHTML = '<div class="student-empty">ไม่พบนักศึกษาในรายวิชานี้</div>';
+      return;
+    }
+
+    box.innerHTML = `
+      <h3>รายชื่อนักศึกษา</h3>
+      <div class="table-wrap">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>ลำดับ</th>
+              <th>รหัสนักศึกษา</th>
+              <th>ชื่อ - นามสกุล</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${students.map((s, i) => `
+              <tr>
+                <td>${i + 1}</td>
+                <td>${htmlEscape(s.student_id || '')}</td>
+                <td>${htmlEscape(s.full_name || s.name || '')}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  };
+
+  const oldTeacherDynamicPage = window.teacherDynamicPage;
+
+  window.teacherDynamicPage = async function(type){
+    if(typeof oldTeacherDynamicPage === 'function'){
+      oldTeacherDynamicPage(type);
+    }
+
+    setTimeout(async () => {
+      await fillAllDynamicCourseSelects();
+
+      if(type === 'submissions'){
+        await window.teacherLoadSubmissionAssignments();
+      }
+
+      if(type === 'ai'){
+        await window.teacherLoadAIAssignments();
+      }
+
+      if(type === 'materials'){
+        await window.teacherLoadMaterials();
+      }
+
+      if(type === 'downloads'){
+        await window.teacherLoadDownloadFiles();
+      }
+
+      if(type === 'settings'){
+        await window.teacherLoadSystemHealth();
+      }
+
+      if(type === 'export'){
+        await fillCourseSelect('exportCourse');
+      }
+    }, 200);
+  };
+
+})();
+</script>
   
 </body>
 </html>
