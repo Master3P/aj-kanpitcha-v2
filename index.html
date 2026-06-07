@@ -475,6 +475,10 @@
 
 <!-- TEACHER PANEL -->
 <section id="pageTeacherPanel" class="page">
+  <button id="teacherMobileMenuBtn" class="teacher-mobile-menu-btn" onclick="toggleTeacherMobileMenu()">
+  ☰ เมนู
+</button>
+  
   <div class="container">
     <div class="head">
       <div>
@@ -2064,6 +2068,27 @@
   };
 
 })();
+</script>
+  
+<script>
+function toggleTeacherMobileMenu(){
+  document.body.classList.toggle('teacher-mobile-menu-open');
+}
+
+function closeTeacherMobileMenu(){
+  document.body.classList.remove('teacher-mobile-menu-open');
+}
+
+document.addEventListener('click', function(e){
+  const sidebar = document.querySelector('#pageTeacherPanel .teacher-tabs');
+  const btn = document.getElementById('teacherMobileMenuBtn');
+
+  if(!document.body.classList.contains('teacher-mobile-menu-open')) return;
+  if(sidebar && sidebar.contains(e.target)) return;
+  if(btn && btn.contains(e.target)) return;
+
+  closeTeacherMobileMenu();
+});
 </script>
   
 </body>
